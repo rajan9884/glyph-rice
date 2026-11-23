@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# ff — fuzzy find files with fzf + bat preview, open in nvim
+# Usage: ff [fzf-extra-args...]
+
+set -euo pipefail
+
+if command -v bat >/dev/null 2>&1; then
+  PREVIEW='bat --color=always {}'
+else
+  PREVIEW='cat {}'
+fi
+
+mapfile -t files < <(fzf -m --preview="$PREVIEW" "$@")
+
+if [ ${#files[@]} -gt 0 ]; then
+  nvim "${files[@]}"
+fi

@@ -1,0 +1,7 @@
+# Start Hyprland on TTY1 if not already running
+if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
+  exec Hyprland
+fi
+
+# Added by Antigravity CLI installer
+export PATH="/home/rajan/.local/bin:$PATH"
