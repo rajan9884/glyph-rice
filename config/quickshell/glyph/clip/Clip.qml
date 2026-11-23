@@ -5,9 +5,9 @@ import Quickshell.Wayland
 import qs
 import qs.components
 
-// буфер обмена: панель из семьи лаунчера, только шире — слева история cliphist строками, справа выбранная запись целиком.
-// Поиск-пилюля с красной кареткой, фильтры чипами (Tab): all / text / links / images. Тип — глиф в круге, картинка —
-// миниатюра точками, цвет — сам цвет. Выбранная строка — белая пилюля. ⏎ — в буфер, вставляешь сам Ctrl+V
+// clipboard: launcher family panel, just wider — left cliphist history as lines, right selected entry in full.
+// Search pill with red caret, filter chips (Tab): all / text / links / images. Type — glyph in circle, image —
+// thumbnail as dots, color — color itself. Selected line — white pill. ⏎ — to buffer, you paste yourself Ctrl+V
 PanelWindow {
     id: root
 
@@ -15,14 +15,14 @@ PanelWindow {
         code: "\u{F0169}", text: "\u{F09A8}", link: "\u{F0337}", image: "\u{F02E9}", color: "\u{F03D8}", file: "\u{F0214}"
     })
     readonly property var filters: ["all", "text", "links", "images"]
-    // ponytail: кэш картинок общий с demonshot — те же файлы в XDG_RUNTIME_DIR, чистится с выходом из сессии
+    // ponytail: image cache shared with demonshot — same files in XDG_RUNTIME_DIR, cleaned on session exit
     readonly property string cache: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/demonshot-clip-"
 
     property var entries: [] // { id, text, type }
     property var held: []
     property int filter: 0
     property int sel: 0
-    property var cached: ({}) // id картинок, уже лежащих в кэше
+    property var cached: ({}) // ids of images already in cache
     readonly property string query: input.text.toLowerCase()
 
     readonly property var view: entries.filter(e =>
@@ -30,7 +30,7 @@ PanelWindow {
             || filter === 1 && e.type !== "link" && e.type !== "image")
         && e.text.toLowerCase().includes(query))
     readonly property var cur: view[sel] ?? null
-    // полное содержимое выбранной записи; пока не пришло — превью из списка
+    // full content of selected entry; while not arrived — preview from list
     property string full: ""
     property string fullId: ""
     property string decId: ""
@@ -42,11 +42,11 @@ PanelWindow {
         if (/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(t)) return "color";
         if (/^https?:\/\/\S+$/.test(t)) return "link";
         if (/^(file:\/\/|~?\/)\S+$/.test(t)) return "file";
-        // ponytail: код угадываем по скобкам и знакомым командам; промахнулись — покажется текстом
+        // ponytail: guess code by brackets and familiar commands; missed — shown as text
         if (/[{};]|^(sudo|git|cd|qs|hyprctl|pacman|paru|yay|npm|cargo|systemctl|sh|bash|curl) /.test(t)) return "code";
         return "text";
     }
-    // картинка: [размер, формат, ширина, высота] из «[[ binary data 340 KiB png 1920x1080 ]]»
+    // image: [size, format, width, height] from '[[ binary data 340 KiB png 1920x1080 ]]'
     function img(e) { return e?.text.match(/binary data (.+) (\w+) (\d+)x(\d+) \]\]$/)?.slice(1) ?? ["", "", 0, 0]; }
     // css #RRGGBBAA → qt #AARRGGBB
     function rgb(s) { s = s.trim(); return s.length === 9 ? "#" + s.slice(7) + s.slice(1, 7) : s; }
@@ -71,7 +71,7 @@ PanelWindow {
         Quickshell.execDetached(["sh", "-c", 'cliphist decode "$1" | wl-copy', "sh", cur.id]);
         close();
     }
-    // ponytail: закреп только защищает от удаления; max-items у cliphist всё равно вытеснит старое
+    // ponytail: pin only protects from deletion; max-items in cliphist still evicts old
     function hold() {
         const id = cur?.id;
         if (!id) return;
@@ -108,7 +108,7 @@ PanelWindow {
         id: dec
         stdout: StdioCollector { onStreamFinished: { root.full = text; root.fullId = root.decId; } }
     }
-    // стрелку держат — не дёргаем cliphist на каждую строку. Бинарное не раскодируем: картинки кэширует строка, прочее — мусор
+    // holding arrow — don't poke cliphist every line. Binary not decoded: image caches as string, rest — trash
     Timer {
         id: decode
         interval: 80
@@ -155,7 +155,7 @@ PanelWindow {
             border { width: 1; color: Theme.s2 }
             MouseArea { anchors.fill: parent }
 
-            // поиск: пилюля, красная каретка, чипы фильтров — как у лаунчера
+            // search: pill, red caret, filter chips — like launcher
             Rectangle {
                 id: search
                 x: 34
@@ -240,7 +240,7 @@ PanelWindow {
                 delegate: Entry {}
             }
 
-            // выбранная запись целиком
+            // selected entry in full
             Rectangle {
                 id: card
                 anchors { left: rows.right; leftMargin: 24; right: parent.right; rightMargin: 34; top: head.top; bottom: parent.bottom; bottomMargin: 34 }
@@ -273,8 +273,8 @@ PanelWindow {
         }
     }
 
-    // строка истории: круг 48 (глиф / миниатюра точками / сам цвет), текст в одну строку, справа номер Doto.
-    // Выбранная — белая пилюля, текст чёрный
+// history line: circle 48 (glyph / thumbnail as dots / color itself), text one line, right Doto number.
+// Selected — white pill, text black
     component Entry: Rectangle {
         id: row
         required property var modelData
@@ -309,8 +309,8 @@ PanelWindow {
                 url: root.cached[row.modelData.id] ? "file://" + root.cache + row.modelData.id : ""
             }
         }
-        // картинку — в кэш, когда строка впервые показалась: вся история разом — сотни МБ в tmpfs.
-        // Через временный файл, чтобы превью не схватило недописанный
+// image — to cache when line first shown: whole history at once — hundreds of MB in tmpfs.
+// Through temp file so preview doesn't grab unwritten
         Process {
             running: row.type === "image" && !root.cached[row.modelData.id]
             command: ["sh", "-c", 'f="$1$2"; [ -s "$f" ] || { cliphist decode "$2" > "$f.$$" && mv "$f.$$" "$f"; }', "sh", root.cache, row.modelData.id]
@@ -341,7 +341,7 @@ PanelWindow {
             Icon { anchors.verticalCenter: parent.verticalCenter; visible: root.held.includes(row.modelData.id); text: "\u{F0403}"; font.pixelSize: 16; color: row.on ? Theme.ink : Theme.fg }
             Num { anchors.verticalCenter: parent.verticalCenter; text: String(row.index + 1).padStart(2, "0"); font.pixelSize: 26; color: row.on ? Theme.ink : Theme.mute }
         }
-        // клик — выбрать, по выбранной — скопировать
+        // click — select, on selected — copy
         TapHandler {
             onTapped: {
                 if (row.on) root.fire();
@@ -351,7 +351,7 @@ PanelWindow {
         HoverHandler { cursorShape: Qt.PointingHandCursor }
     }
 
-    // ---- превью по типам: Loader растягивает их на карточку. Содержимое буфера — только PlainText: там бывает html ----
+    // ---- previews by types: Loader stretches them to card. Buffer content — PlainText only: it may have html ----
     Component {
         id: textPv
         Text {
@@ -366,7 +366,7 @@ PanelWindow {
     }
     Component {
         id: codePv
-        // ponytail: длинные строки просто обрезаются краем карточки
+        // ponytail: long strings just clipped by card edge
         Text {
             text: root.body.replace(/\s+$/, "")
             textFormat: Text.PlainText
@@ -402,7 +402,7 @@ PanelWindow {
     }
     Component {
         id: imagePv
-        // картинка точками, как обложки: монохром, шаг 3
+        // image as dots, like covers: monochrome, step 3
         Column {
             id: ipv
             readonly property var m: root.img(root.cur)
@@ -460,7 +460,7 @@ PanelWindow {
         }
     }
 
-    // полный путь / адрес мелко под крупным именем
+    // full path / address small under large name
     component Mono: Text {
         width: parent?.width ?? 0
         textFormat: Text.PlainText

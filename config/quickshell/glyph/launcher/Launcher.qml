@@ -6,13 +6,13 @@ import Quickshell.Wayland
 import qs
 import qs.components
 
-// лаунчер: тап Super или Super+Space. Панель 860 по центру, экран гаснет до 74%. Поиск-пилюля с красной кареткой,
-// режимы чипами (Tab): apps / style / tray / calc. Без запроса — «recent» и все приложения сеткой по 6, справа алфавит.
-// style — цвет, как scheme в caelestia: откуда (nothing, обои, палитра), под ним — тона обоев и варианты (tonal spot…) или палитры
-// (catppuccin, rosé pine…), тема (Theme.styles, те же, что STYLE в настройках). Кружки — образцы, точка — что стоит,
-// ↵ ставит и лаунчер не закрывает. При палитрах поиск — и по группе: «catppuccin».
-// tray — фоновые приложения из трея (discord, telegram…): клик — их окно, наведение — их меню карточкой под кругом.
-// Появляется как Charms и Clip: подъём на 24 и fade. Иконки — иконки темы точками в кругах; выбранная — белый круг
+// launcher: tap Super or Super+Space. Panel 860 centered, screen dims to 74%. Search pill with red caret,
+// modes as chips (Tab): apps / style / tray / calc. Without query — «recent» and all apps grid of 6, alphabet on right.
+// style — color, like scheme in caelestia: from where (nothing, wallpaper, palette), under it — wallpaper tones and variants (tonal spot…) or palettes
+// (catppuccin, rosé pine…), theme (Theme.styles, same as STYLE in settings). Circles — samples, dot — what's set,
+// ↵ sets and launcher doesn't close. With palettes search — also by group: «catppuccin».
+// tray — background apps from tray (discord, telegram…): click — their window, hover — their menu as card under circle.
+// Appears like Charms and Clip: lift by 24 and fade. Icons — theme icons as dots in circles; chosen — white circle
 PanelWindow {
     id: root
 
@@ -20,13 +20,13 @@ PanelWindow {
     property int sel: 0
     readonly property var modes: ["apps", "style", "tray", "calc"]
     readonly property string query: input.text
-    property var uses: ({}) // id приложения → сколько раз открыли
+    property var uses: ({}) // app id → times opened
 
-    // иконка темы или путь из .desktop; нет её (или файла) — общий значок приложения, а не пустой круг
+    // icon from theme or path from .desktop; if missing (or file) — generic app icon, not empty circle
     function icon(name) { return Quickshell.iconPath(name || "application-x-executable", "application-x-executable"); }
 
-    // на старте DesktopEntries добавляет записи по одной (~160 valuesChanged): биндинг пересобирал бы сетку на каждую —
-    // секунды фриза. Собираем раз, когда список затих
+    // on start DesktopEntries adds entries one by one (~160 valuesChanged): binding would rebuild grid on each —
+    // seconds of freeze. Collect once when list quiets down
     property var apps: []
     Timer {
         id: appsT
@@ -41,14 +41,14 @@ PanelWindow {
         target: DesktopEntries.applications
         function onValuesChanged() { appsT.restart(); }
     }
-    // трей — только пока открыт режим tray: иначе каждое новое сообщение (счётчик в подсказке telegram) пересобирало бы
-    // список. Имя — подсказка, у discord пустой title. Только меню (onlyMenu) — клик лаунчер не закрывает, меню и так под ним
+    // tray — only while tray mode open: otherwise every new message (counter in telegram tooltip) would rebuild
+    // list. Name — tooltip, discord has empty title. Only menu (onlyMenu) — click doesn't close launcher, menu is already under it
     readonly property var tray: !visible || mode !== 2 ? [] : SystemTray.items.values.map(i => ({
         name: i.tooltipTitle || i.title || i.id, src: i.icon, extra: i.id.toLowerCase(), tray: i,
         keep: i.onlyMenu, run: () => i.onlyMenu || i.activate()
     }))
 
-    // подпоследовательность: начало слова и подряд — выше. hl — индексы совпавших букв
+    // subsequence: word start and consecutive — higher. hl — indices of matched letters
     function match(s, q) {
         if (!q) return { score: 1, hl: [] };
         const l = s.toLowerCase(), hl = [], at = l.indexOf(q);
@@ -71,7 +71,7 @@ PanelWindow {
         return out.sort((a, b) => b.score - a.score || (uses[b.id] ?? 0) - (uses[a.id] ?? 0));
     }
 
-    // блоки: { head, sub, items }; каждой ячейке — row/col, по ним ходят стрелки
+    // blocks: { head, sub, items }; each cell gets row/col, arrows move by them
     readonly property var blocks: {
         const q = query.trim().toLowerCase();
         let b;
@@ -117,7 +117,7 @@ PanelWindow {
         if (row.length) sel = row.reduce((a, x) => Math.abs(x.col - c.col) < Math.abs(a.col - c.col) ? x : a).k;
     }
     function launch() {
-        if (!shown) return; // гаснет Theme.t и ещё ловит клики: второй клик двойного — второе окно
+        if (!shown) return; // Theme.t fades and still catches clicks: second click of double — second window
         if (mode === 3) {
             if (calcOut) Quickshell.execDetached(["wl-copy", "--", calcOut]);
             return close();
@@ -144,11 +144,11 @@ PanelWindow {
     Process { id: calc; stdout: StdioCollector { onStreamFinished: root.calcOut = text.trim() } }
     onQueryChanged: {
         sel = 0;
-        if (mode === 3 && query.trim()) calc.exec(["qalc", "-t", query]); // exec гасит прошлый расчёт
+        if (mode === 3 && query.trim()) calc.exec(["qalc", "-t", query]); // exec kills previous calculation
         else calcOut = "";
     }
     onModeChanged: { sel = 0; flick.contentY = 0; menuOpen = false; if (mode === 3) queryChanged(); }
-    // список сжался без нового запроса (приложение ушло из трея) — курсор за концом, cur пустой
+    // list shrank without new query (app left tray) — cursor past end, cur empty
     onFlatChanged: sel = Math.max(0, Math.min(sel, flat.length - 1))
 
     onVisibleChanged: if (visible) input.forceActiveFocus()
@@ -183,7 +183,7 @@ PanelWindow {
             border { width: 1; color: Theme.s2 }
             MouseArea { anchors.fill: parent }
 
-            // поиск: пилюля, красная каретка, чипы режимов
+            // search: pill, red caret, mode chips
             Rectangle {
                 id: search
                 x: 34
@@ -261,7 +261,7 @@ PanelWindow {
                     id: body
                     width: flick.width
 
-                    // calc: ответ крупно, Enter — скопировать
+                    // calc: answer large, Enter — copy
                     Column {
                         visible: root.mode === 3
                         topPadding: 10
@@ -270,8 +270,8 @@ PanelWindow {
                         Num { width: body.width; elide: Text.ElideRight; text: root.calcOut || "—"; font.pixelSize: 96 }
                     }
 
-                    // по индексу, а не по массиву: новый blocks (буква в поиске, запуск, recent) не пересоздаёт ~160 ячеек
-                    // с иконками и слоями — им только меняются данные
+                    // by index, not by array: new blocks (letter in search, launch, recent) don't recreate ~160 cells
+                    // with icons and layers — they only change data
                     Repeater {
                         id: blockRep
                         model: root.blocks.length
@@ -282,12 +282,12 @@ PanelWindow {
                             readonly property var modelData: root.blocks[index] ?? ({ head: "", items: [] })
                             readonly property Item g: grid
                             width: body.width
-                            topPadding: index ? 30 : 10 // +20 у flick сверху: прокрученное режется с зазором под поиском
+                                topPadding: index ? 30 : 10 // +20 above flick: scrolled is cut with gap under search
 
                             Row {
                                 spacing: 14
                                 bottomPadding: 18
-                                // группа букв Doto: какие буквы сейчас в окне
+                                // alphabet letter group Doto: what letters are currently in window
                                 Num { visible: !!block.modelData.all; anchors.baseline: blab.baseline; text: root.range; font.pixelSize: 34 }
                                 Lb { id: blab; text: block.modelData.head + (block.modelData.sub ? ` · ${block.modelData.sub}` : "") }
                             }
@@ -305,7 +305,7 @@ PanelWindow {
                 }
             }
 
-            // алфавит справа: буквы в окне — белые, клик — к первой на эту букву
+            // alphabet on right: letters in window — white, click — to first with this letter
             Column {
                 visible: root.mode === 0 && !root.query && !!root.allGrid
                 anchors { right: parent.right; rightMargin: 12; top: parent.top; topMargin: 130 }
@@ -325,7 +325,7 @@ PanelWindow {
             }
         }
 
-        // меню приложения из трея: под его кругом, по ширине — в пределах панели; вниз вылезает за панель, как поповер
+        // tray app menu: under its circle, width — within panel; extends down past panel like popover
         Rectangle {
             id: menu
             property real mt: root.menuOpen && root.mode === 2 ? 1 : 0
@@ -345,9 +345,9 @@ PanelWindow {
             color: Theme.s2
             border { width: 1; color: Theme.s3 }
             clip: true
-            MouseArea { anchors.fill: parent } // мимо пунктов — не в затемнение, оно закрыло бы лаунчер
+            MouseArea { anchors.fill: parent } // past items — not into scrim, it would close launcher
             HoverHandler { id: menuHov }
-            // Корневой opener держит DBusMenu и его пункты живыми, пока второй opener показывает подменю.
+            // Root opener keeps DBusMenu and its items alive while second opener shows submenu.
             QsMenuOpener { id: opener; menu: menu.mt > 0 ? root.peek?.tray?.menu ?? null : null }
             QsMenuOpener { id: subOpener; menu: opener.menu && root.sub.length ? root.sub[root.sub.length - 1] : null }
 
@@ -395,7 +395,7 @@ PanelWindow {
                             font { family: Theme.ui; pixelSize: 15 }
                             color: row.modelData.enabled ? Theme.fg : Theme.mute
                         }
-                        // справа: подменю — шеврон; галочка или радио — точка, отмечен — белая, нет — кольцо
+                        // right: submenu — chevron; check or radio — dot, checked — white, not — ring
                         Icon {
                             visible: row.modelData.hasChildren
                             anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
@@ -426,12 +426,12 @@ PanelWindow {
         }
     }
 
-    // буквы всех приложений, чьи ряды сейчас видны: «A–F»
+    // letters of all apps whose rows are currently visible: «A–F»
     readonly property var allItems: blocks.find(b => b.all)?.items ?? []
     readonly property Item allGrid: { const i = blocks.findIndex(b => b.all); return blockRep.count > i && i >= 0 ? blockRep.itemAt(i)?.g ?? null : null; }
     readonly property string range: {
         if (!allGrid || !allItems.length) return "";
-        const top = allGrid.mapToItem(body, 0, 0).y, rh = 88 + 10 + 20 + 22; // круг, отступ, подпись, зазор
+        const top = allGrid.mapToItem(body, 0, 0).y, rh = 88 + 10 + 20 + 22; // circle, offset, caption, gap
         const r0 = Math.max(0, Math.floor((flick.contentY - top) / rh)), r1 = Math.floor((flick.contentY + flick.height - top) / rh);
         const seen = allItems.slice(r0 * 6, (r1 + 1) * 6).map(a => a.name[0].toUpperCase());
         return seen.length ? seen[0] === seen[seen.length - 1] ? seen[0] : `${seen[0]}–${seen[seen.length - 1]}` : "";
@@ -443,12 +443,12 @@ PanelWindow {
         flick.contentY = Math.min(Math.max(0, flick.contentHeight - flick.height), allGrid.mapToItem(body, 0, 0).y + Math.floor(i / 6) * (88 + 10 + 20 + 22));
     }
 
-    // ---- меню приложения из трея: навёл на круг — карточка под ним с пунктами его меню, как трей в баре caelestia.
-    // Подменю — на месте списка, сверху «back»; пункт — сделать и закрыть лаунчер. Ушёл и с круга, и с карточки — гаснет.
-    // ponytail: меню только мышью; стрелками в него — если попросят ----
-    property Item hotCell: null // круг под курсором
-    property var peek: null // { tray, x, y }: чьё меню и где низ его ячейки; держится, пока карточка гаснет
-    property var sub: [] // открытые подменю, на экране — последнее
+    // ---- tray app menu: hovered on circle — card under it with its menu items, like tray in caelestia bar.
+    // Submenu — in place of list, «back» on top; item — do and close launcher. Left both circle and card — fades.
+    // ponytail: menu mouse only; arrows into it — if asked ----
+    property Item hotCell: null // circle under cursor
+    property var peek: null // { tray, x, y }: whose menu and where bottom of its cell is; held until card fades
+    property var sub: [] // open submenus, on screen — last one
     onSubChanged: menuList.contentY = 0
     property bool menuOpen: false
     readonly property bool menuHot: !!hotCell || menuHov.hovered
@@ -463,21 +463,21 @@ PanelWindow {
         menuOpen = true;
     }
 
-    // приложение: круг 88 с глифом или иконкой точками, подпись — совпавшие буквы белые
+    // app: circle 88 with glyph or icon as dots, caption — matched letters white
     component Cell: Column {
         id: cell
         required property int index
         property var items: []
         readonly property var modelData: items[index] ?? ({ name: "", hl: [] })
         readonly property bool on: root.sel === modelData.k
-        // окно layer-shell Quickshell пересоздаёт на каждое открытие, и Image грузит текстуру даже скрытым: 160 иконок —
-        // ~60 мс первого кадра. Вне прокрутки (с запасом в ряд) ячейка пустая и без иконки, высоту держит сама
-        property real gy // y сетки в body
+        // Quickshell layer-shell window recreates on each open, and Image loads texture even hidden: 160 icons —
+        // ~60 ms first frame. Outside scroll (with row margin) cell empty and no icon, height holds itself
+        property real gy // y of grid in body
         readonly property bool near: gy + y < flick.contentY + flick.height + 140 && gy + y + height > flick.contentY - 140
         width: body.width / 6
         height: 88 + spacing + label.implicitHeight
         spacing: 10
-        onOnChanged: if (on) flick.ensure(mapToItem(body, 0, 0).y - 8, height + 8) // 8 — кольцо образца над кругом
+        onOnChanged: if (on) flick.ensure(mapToItem(body, 0, 0).y - 8, height + 8) // 8 — sample ring above circle
         HoverHandler {
             enabled: root.mode === 2
             onHoveredChanged: if (hovered) root.hover(cell); else if (root.hotCell === cell) root.hotCell = null
@@ -491,8 +491,8 @@ PanelWindow {
             height: 88
             radius: 44
             color: cell.modelData.fill ?? (cell.on ? Theme.fg : Theme.s2)
-            border { width: cell.modelData.fill ? 1 : 0; color: Theme.s3 } // чёрный образец на панели
-            // образец под курсором — кольцо вокруг: залить белым — пропал бы цвет. dot — акцент палитры, что стоит сейчас — точка
+            border { width: cell.modelData.fill ? 1 : 0; color: Theme.s3 } // black sample on panel
+            // sample under cursor — ring around: fill white — color would disappear. dot — palette accent, what's set now — dot
             Rectangle { visible: cell.on && !!cell.modelData.fill; anchors.centerIn: parent; width: 104; height: 104; radius: 52; color: "transparent"; border { width: 2; color: Theme.fg } }
             Rectangle { id: inner; visible: !!cell.modelData.dot; anchors.centerIn: parent; width: 40; height: 40; radius: 20; color: cell.modelData.dot ?? "transparent" }
             Rectangle { visible: !!cell.modelData.now; anchors.centerIn: parent; width: 14; height: 14; radius: 7; color: Theme.on(inner.visible ? inner.color : disc.color) }
@@ -504,8 +504,8 @@ PanelWindow {
                 source: cell.near ? cell.modelData.src ?? "" : ""
                 sourceSize: Qt.size(44, 44)
                 asynchronous: true
-                retainWhileLoading: true // ячейке сменили приложение — старая иконка, пока грузится новая
-                layer.enabled: cell.near // слой рисует свой Image и скрытым
+                retainWhileLoading: true // cell changed app — old icon until new loads
+                layer.enabled: cell.near // layer draws its own Image and hidden
                 layer.effect: Dm { step: 2.5 }
             }
             TapHandler { onTapped: { root.sel = cell.modelData.k; root.launch(); } }

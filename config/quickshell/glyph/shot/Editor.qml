@@ -5,16 +5,17 @@ import Quickshell.Wayland
 import qs
 import qs.components
 
-// правка снимка: экран почти чёрный, снимок в рамке с точками по углам, как у прицела; инструменты — чипы в пилюле,
-// чернила — круги, толщина — точки. Метки живут в пикселях снимка; ⏎ запекает их поверх файла (grabToImage в родном размере) и кладёт в буфер
+// snapshot edit: screen almost black, snapshot in frame with dots at corners, like aim; tools — chips in pill,
+//
+// inks — circles, thickness — dots. Marks live in snapshot pixels; ⏎ bakes them onto file (grabToImage native size) and puts to buffer
 Scope {
     id: root
 
     readonly property var tools: ["pen", "arrow", "rect", "blur", "text"]
     readonly property var hotkeys: [Qt.Key_P, Qt.Key_A, Qt.Key_R, Qt.Key_B, Qt.Key_T]
-    // чернила запекаются в файл — от темы не зависят. Красный здесь — содержимое снимка, не интерфейс
+    // inks baked into file — don't depend on theme. Red here — snapshot content, not UI
     readonly property var inks: [Theme.nothingRed, "#FFFFFF", "#000000", "#8C8C8C"]
-    readonly property var sizes: [3, 6, 12] // толщина в логических пикселях; в снимке — × dpr
+    readonly property var sizes: [3, 6, 12] // thickness in logical pixels; in snapshot — × dpr
 
     property string shot: ""
     property var scr: null
@@ -22,7 +23,7 @@ Scope {
     property int ink: 0
     property int size: 1
     property var marks: []  // { k: "pen", c, w, pts } · { k: "arrow" | "rect" | "blur", c, w, x1, y1, x2, y2 } · { k: "text", c, s, x, y, t }
-    property var live: null // метка, которую тянут прямо сейчас
+    property var live: null // mark being dragged right now
     readonly property real dpr: scr?.devicePixelRatio ?? 1
     readonly property real w: sizes[size] * dpr
 
@@ -47,7 +48,7 @@ Scope {
 
     function save() {
         commitWord();
-        // ponytail: снимок перезаписывается; оригинал рядом — если захочется откатывать правки
+        // ponytail: snapshot overwritten; original beside it — if want to roll back edits
         canvas.grabToImage(r => {
             if (!r.saveToFile(root.shot)) return;
             Quickshell.execDetached(["sh", "-c", 'wl-copy -t image/png < "$1"', "sh", root.shot]);
@@ -89,7 +90,7 @@ Scope {
                 e.accepted = true;
             }
 
-            // снимок вписан между подписями и пилюлей, крупнее 1:1 не растёт; доезжает из 96%
+            // snapshot fits between labels and pill, doesn't grow beyond 1:1; slides in from 96%
             Item {
                 id: frame
                 readonly property real fit: Math.min(1 / (root.dpr * Theme.s), (st.width - 240) / Math.max(1, img.implicitWidth),
@@ -111,12 +112,12 @@ Scope {
                     Image {
                         id: img
                         source: root.shot ? "file://" + root.shot : ""
-                        cache: false // после сохранения тот же путь — перечитать
+                        cache: false // after save same path — reread
                         smooth: true
                         mipmap: true
                     }
                     Repeater {
-                        // живая метка — последней; её делегат пересоздаётся на каждый шаг мыши, остальные — только при фиксации
+                        // live mark — last; its delegate recreated on every mouse step, others — only on fix
                         model: root.marks
                         Mark { required property var modelData; m: modelData; src: img }
                     }
@@ -131,7 +132,7 @@ Scope {
                         font { family: Theme.ui; pixelSize: root.w * 6; weight: Font.DemiBold }
                         color: root.inks[root.ink]
                         selectionColor: Theme.s3
-                        cursorDelegate: Rectangle { width: 2 * root.dpr; color: Theme.accent } // каретка — «живое»
+                        cursorDelegate: Rectangle { width: 2 * root.dpr; color: Theme.accent } // caret — "live"
                         onAccepted: root.commitWord()
                         Keys.onEscapePressed: { visible = false; st.forceActiveFocus(); }
                     }
@@ -154,7 +155,7 @@ Scope {
                         onPositionChanged: e => {
                             const l = root.live;
                             if (!l) return;
-                            // ponytail: штрих копируется на каждый шаг — O(n²), хватает на штрихи в тысячи точек
+                            // ponytail: stroke copied on every step — O(n²), enough for strokes of thousands of points
                             if (l.k === "pen") root.live = Object.assign({}, l, { pts: l.pts.concat([Qt.point(e.x, e.y)]) });
                             else root.live = Object.assign({}, l, { x2: e.x, y2: e.y });
                         }
@@ -167,7 +168,7 @@ Scope {
                     }
                 }
 
-                // рамка и точки по углам — как у прицела
+                // frame and dots at corners — like aim
                 Rectangle { anchors.fill: parent; anchors.margins: -1; color: "transparent"; border { width: 1; color: Theme.s3 } }
                 Repeater {
                     model: 4
@@ -196,7 +197,7 @@ Scope {
                 }
             }
 
-            // инструменты — чипы; дальше чернила кругами и толщина точками. Доезжают снизу
+            // tools — chips; then inks as circles and thickness as dots. Slide up from bottom
             Column {
                 anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 44 - 24 * (1 - win.t) }
                 opacity: win.t
@@ -217,7 +218,7 @@ Scope {
                     Sep {}
                     Repeater {
                         model: root.inks
-                        // выбранные чернила — в кольце White
+                        // selected inks — in white ring
                         Item {
                             required property color modelData
                             required property int index
@@ -277,18 +278,18 @@ Scope {
         }
     }
 
-    // разделитель в пилюле — точка Mute
+    // separator in pill — mute dot
     component Sep: Item {
         width: 18
         height: 36
         Rectangle { anchors.centerIn: parent; width: 4; height: 4; radius: 2; color: Theme.mute }
     }
 
-    // одна метка в пикселях снимка
+    // one mark in snapshot pixels
     component Mark: Item {
         id: mk
         property var m
-        property Item src // снимок для blur: id файла внутрь inline-компонента не видны
+        property Item src // snapshot for blur: file id not visible inside inline component
         readonly property real x0: Math.min(m.x1, m.x2)
         readonly property real y0: Math.min(m.y1, m.y2)
         readonly property real w0: Math.abs(m.x2 - m.x1)
@@ -316,7 +317,7 @@ Scope {
             id: arrow
             Shape {
                 id: ar
-                // наконечник — треугольник длиной 4 толщины, древко до его основания
+                // tip — triangle of 4 thickness length, stem to its base
                 readonly property real a: Math.atan2(mk.m.y2 - mk.m.y1, mk.m.x2 - mk.m.x1)
                 readonly property real hl: mk.m.w * 4
                 readonly property point base: Qt.point(mk.m.x2 - Math.cos(a) * hl * 0.8, mk.m.y2 - Math.sin(a) * hl * 0.8)
@@ -351,7 +352,7 @@ Scope {
                 border { width: mk.m.w; color: mk.m.c }
             }
         }
-        // blur: кусок снимка крупными пикселями — пароли, лица, адреса
+        // blur: piece of snapshot large pixels — passwords, faces, addresses
         Component {
             id: blur
             ShaderEffectSource {

@@ -7,9 +7,9 @@ import Quickshell.Wayland
 import qs
 import qs.components
 
-// скриншот: экран замирает (grim в файл, кадр под оверлеем) и гаснет; область — белая рамка 1px с точками по углам
-// и размером Doto, у курсора лупа — пиксели точками в круге и цвет. Режимы — чипы в пилюле снизу.
-// Выстрел: рамка вспыхивает белым (запись — красным), снимок уже в буфере и в папке, карточка в углу; клик — правка (Editor)
+// screenshot: screen freezes (grim to file, frame under overlay) and fades; region — white frame 1px with dots at corners
+// and Doto size, loupe at cursor — pixels as dots in circle and color. Modes — chips in pill below.
+// shot: frame flashes white (record — red), snapshot already in buffer and folder, card in corner; click — edit (Editor)
 Scope {
     id: root
 
@@ -21,9 +21,9 @@ Scope {
     property int delay: 0
     property string frozen: ""
     property var scr: null
-    // всё ниже — в пикселях макета (Stage); логические = × Theme.s, кадра — × k
-    property var wins: []       // окна текущего ws: { x, y, w, h }
-    property rect drag: Qt.rect(0, 0, 0, 0) // w = 0 — ничего не выбрано
+    // all below — in layout pixels (Stage); logical = × Theme.s, frame — × k
+    property var wins: []       // current ws windows: { x, y, w, h }
+    property rect drag: Qt.rect(0, 0, 0, 0) // w = 0 — nothing selected
     property real mx: 0
     property real my: 0
     readonly property var hover: wins.find(w => mx >= w.x && mx < w.x + w.w && my >= w.y && my < w.y + w.h) ?? null
@@ -32,7 +32,7 @@ Scope {
         : drag
     readonly property real k: frozenImg.sourceSize.width / Math.max(1, stage.width)
 
-    // последний выстрел: для вспышки и карточки
+    // last shot: for flash and card
     property string shot: ""
     property string shotWhat: ""
     property string shotDims: ""
@@ -44,8 +44,8 @@ Scope {
         const mon = Hyprland.focusedMonitor;
         scr = Quickshell.screens.find(s => s.name === mon?.name) ?? Quickshell.screens[0];
         Hyprland.refreshToplevels();
-        picker.unloadImage(frozenImg.source); // холст держит кадр в памяти, пока не выгрузим
-        freeze.next = `${run}/glyph-frozen-${Date.now()}.ppm`; // ponytail: ppm без сжатия — grim 90 мс против 450 у png
+        picker.unloadImage(frozenImg.source); // canvas holds frame in memory until unload
+        freeze.next = `${run}/glyph-frozen-${Date.now()}.ppm`; // ponytail: ppm without compression — grim 90 ms vs 450 png
         freeze.exec(["sh", "-c", 'rm -f "$3"/glyph-frozen-*; grim -t ppm -o "$1" "$2" && echo ok', "sh", scr.name, freeze.next, run]);
     }
     function close() { aim.shown = false; }
@@ -59,7 +59,7 @@ Scope {
         shotRec = mode === 3;
         shotWhat = `${modes[mode]} · ${Qt.formatTime(new Date(), "hh:mm")}`;
         shotDims = `${w}×${h}`;
-        // оверлей гаснет сразу, без анимации: запись и снимок с таймером идут с живого экрана
+        // overlay fades immediately, no animation: record and snapshot with timer go from live screen
         aim.snap = true;
         aim.shown = false;
         if (shotRec) {
@@ -68,8 +68,8 @@ Scope {
                 + `gpu-screen-recorder ${g} ${Sys.recArgs()} -o "$(xdg-user-dir VIDEOS)/rec-$(date +%F_%H-%M-%S).mp4"`]);
             return fx.restart();
         }
-        // без таймера режем замёрзший кадр — что видел, то и снял; с таймером снимаем живой экран
-        // vips, в отличие от magick, падает на рамке за краем кадра на пиксель — дробный масштаб, поэтому зажимаем
+        // without timer crop frozen frame — what seen, that shot; with timer shoot live screen
+        // vips, unlike magick, crashes on frame edge at pixel — fractional scale, so clamp
         const cx = Math.round(r.x * k), cy = Math.round(r.y * k);
         const crop = `${cx} ${cy} ${Math.min(Math.round(r.width * k), frozenImg.sourceSize.width - cx)} ${Math.min(Math.round(r.height * k), frozenImg.sourceSize.height - cy)}`;
         take.exec(["sh", "-c", `d="$(xdg-user-dir PICTURES)/shots"; mkdir -p "$d"; f="$d/shot-$(date +%F_%H-%M-%S).png"
@@ -84,13 +84,13 @@ Scope {
         stdout: StdioCollector {
             onStreamFinished: {
                 if (!text.trim()) return;
-                root.frozen = freeze.next; // только теперь: файл дописан
+                root.frozen = freeze.next; // only now: file fully written
                 root.mode = 0;
                 root.drag = Qt.rect(0, 0, 0, 0);
                 const s = Theme.s;
                 root.wins = Hyprland.toplevels.values
                     .filter(t => t.workspace?.id === Hyprland.focusedMonitor?.activeWorkspace?.id && t.lastIpcObject?.size)
-                    .sort((a, b) => (b.lastIpcObject.floating ?? false) - (a.lastIpcObject.floating ?? false)) // плавающие сверху
+                    .sort((a, b) => (b.lastIpcObject.floating ?? false) - (a.lastIpcObject.floating ?? false)) // floating on top
                     .map(t => ({ x: (t.lastIpcObject.at[0] - root.scr.x) / s, y: (t.lastIpcObject.at[1] - root.scr.y) / s,
                                  w: t.lastIpcObject.size[0] / s, h: t.lastIpcObject.size[1] / s }));
                 aim.snap = false;
@@ -112,11 +112,11 @@ Scope {
 
     Editor { id: editor }
 
-    // ============ прицел ============
+    // ============ aim ============
     PanelWindow {
         id: aim
 
-        // t: 0 → 1 за Theme.t. Открывается кадр сразу (он и так совпадает с экраном), гаснет целиком; snap — без анимации
+        // t: 0 → 1 per Theme.t. Frame opens immediately (matches screen anyway), fades entirely; snap — without animation
         property bool shown: false
         property bool snap: false
         property real t: shown ? 1 : 0
@@ -149,10 +149,10 @@ Scope {
             Image {
                 id: frozenImg
                 anchors.fill: parent
-                source: root.frozen ? "file://" + root.frozen : "" // кэш общий с лупой и пипеткой: кадр декодится раз, не трижды
+                source: root.frozen ? "file://" + root.frozen : "" // shared cache with loupe and picker: frame decoded once, not three times
             }
 
-            // всё вне рамки гаснет; пока рамки нет — гаснет слегка
+            // everything outside frame darkens; while no frame — dims slightly
             Item {
                 anchors.fill: parent
                 opacity: aim.t
@@ -164,11 +164,11 @@ Scope {
                 Rectangle { x: parent.r.x + parent.r.width; y: parent.r.y; width: parent.width - x; height: parent.r.height; color: parent.c }
             }
 
-            // перекрестье — пунктир точками через весь экран
+            // crosshair — dashed dots across whole screen
             Dots { y: Math.round(root.my) - 4; width: parent.width; height: 8; opacity: 0.5 * aim.t }
             Dots { x: Math.round(root.mx) - 4; width: 8; height: parent.height; opacity: 0.5 * aim.t }
 
-            // рамка: 1px White, трети точками, точки по углам; сверху режим и размер
+            // frame: 1px White, thirds dotted, dots at corners; top mode and size
             Item {
                 id: vf
                 visible: root.sel.width > 0
@@ -201,7 +201,7 @@ Scope {
                     }
                 }
 
-                // над рамкой; у верхнего края — внутри
+                // above frame; at top edge — inside
                 Item {
                     y: vf.y > 70 ? -height - 18 : 18
                     width: parent.width
@@ -210,7 +210,7 @@ Scope {
                         x: 2
                         anchors.bottom: parent.bottom
                         spacing: 10
-                        // запись — красная точка: единственное «живое» на экране
+                        // record — red dot: only "live" thing on screen
                         Rectangle { visible: root.mode === 3; anchors.verticalCenter: parent.verticalCenter; width: 10; height: 10; radius: 5; color: Theme.accent }
                         Lb { text: root.modes[root.mode]; color: Theme.fg }
                     }
@@ -224,7 +224,7 @@ Scope {
                 }
             }
 
-            // лупа: пиксели под курсором ×12, каждый — точка (Dm с шагом в пиксель), снизу координаты и цвет
+            // loupe: pixels under cursor ×12, each — dot (Dm with pixel step), below coords and color
             Item {
                 id: loupe
                 readonly property int px: Math.floor(root.mx * root.k)
@@ -236,7 +236,7 @@ Scope {
                 width: 180
                 height: 240
 
-                // цвет пикселя: читаем из 1×1 холста, он прячется под лупой
+                // pixel color: read from 1×1 canvas, it hides under loupe
                 Canvas {
                     id: picker
                     property string hex: "#000000"
@@ -256,7 +256,7 @@ Scope {
                 }
 
                 Rectangle { x: 6; y: 6; width: 168; height: 168; radius: 84; color: Theme.bg }
-                // 13 × 13 пикселей; сетка точек совпадает с пикселями: центр — середина 7-й клетки
+                // 13 × 13 pixels; dot grid matches pixels: center — middle of 7th cell
                 Item {
                     x: 12
                     y: 12
@@ -299,13 +299,13 @@ Scope {
                         root.drag = Qt.rect(Math.min(from.x, e.x), Math.min(from.y, e.y), Math.abs(e.x - from.x), Math.abs(e.y - from.y));
                 }
                 onPressed: e => {
-                    if (root.mode === 1 || root.mode === 2) return root.fire(); // окно или экран — снимаем по клику
+                    if (root.mode === 1 || root.mode === 2) return root.fire(); // window or screen — shoot on click
                     from = Qt.point(e.x, e.y);
                     root.drag = Qt.rect(e.x, e.y, 0, 0);
                 }
             }
 
-            // режимы и таймер — чипы в пилюле, под ней клавиши; доезжают снизу
+            // modes and timer — chips in pill, below them keys; slide up from bottom
             Column {
                 anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 44 - 24 * (1 - aim.t) }
                 opacity: aim.t
@@ -344,7 +344,7 @@ Scope {
         }
     }
 
-    // ============ выстрел: рамка вспыхивает, снимок въезжает карточкой в правый нижний угол ============
+    // ============ shot: frame flashes, snapshot slides in as card bottom right ============
     PanelWindow {
         id: fired
         screen: root.scr
@@ -352,7 +352,7 @@ Scope {
         anchors { left: true; right: true; top: true; bottom: true }
         color: "transparent"
         exclusionMode: ExclusionMode.Ignore
-        mask: Region { item: root.shotRec ? null : card } // мимо карточки клики проходят насквозь
+        mask: Region { item: root.shotRec ? null : card } // clicks pass through card
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
         WlrLayershell.namespace: "glyph-shot"
@@ -360,8 +360,8 @@ Scope {
         Stage {
             id: fstage
 
-            // вспышка: снятая область светится белым и гаснет. Запись — красная рамка снаружи, без заливки и свечения:
-            // рекордер стартует, пока она гаснет, в кадр попасть не должна. ponytail: у записи всего экрана рамка за краем — не видна
+            // flash: shot area glows white and fades. Record — red frame outside, no fill or glow:
+            // recorder starts while it fades, shouldn't get in frame. ponytail: full screen record frame beyond edge — not visible
             Rectangle {
                 id: flash
                 readonly property real o: root.shotRec ? 4 : 0
@@ -382,7 +382,7 @@ Scope {
                 }
             }
 
-            // карточка: Surface, скругление 40, снимок со скруглением 24 — концентрично
+            // card: Surface, rounding 40, snapshot with rounding 24 — concentrically
             Rectangle {
                 id: card
                 property real t: 0
@@ -413,7 +413,7 @@ Scope {
                             source: root.shot ? "file://" + root.shot : ""
                             sourceSize: Qt.size(328, 184)
                             fillMode: Image.PreserveAspectCrop
-                            cache: false // после правки тот же путь — перечитать
+                            cache: false // after edit same path — reread
                         }
                     }
                     Item {
@@ -431,7 +431,7 @@ Scope {
             }
         }
 
-        // вспышка гаснет за 0.9 с, карточка доезжает справа, висит пару секунд и уходит тем же путём
+        // flash fades in 0.9 s, card slides in from right, hangs a couple seconds, leaves the same way
         SequentialAnimation {
             id: fx
             PropertyAction { target: fired; property: "visible"; value: true }
@@ -445,7 +445,7 @@ Scope {
         }
     }
 
-    // пунктир: ряд или столбец точек шагом 8 — линия толщиной 8 даёт ровно один ряд
+    // dotted: row or column of dots step 8 — 8px line gives exactly one row
     component Dots: Image {
         fillMode: Image.Tile
         horizontalAlignment: Image.AlignLeft

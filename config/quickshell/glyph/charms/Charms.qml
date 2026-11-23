@@ -5,8 +5,8 @@ import qs
 import qs.components
 import "charms.js" as Data
 
-// чары: каомодзи, эмодзи и символы. Панель из семьи буфера: поиск-пилюля, вкладки чипами (Tab),
-// слева сетка плиток, справа выбранное крупно. Выбранная плитка — белая. ⏎ — в буфер, вставляешь сам Ctrl+V
+// charms: kaomoji, emoji and symbols. Panel from buffer family: search pill, tabs as chips (Tab),
+// tile grid on left, chosen large on right. Chosen tile — white. ⏎ — to buffer, you paste it yourself Ctrl+V
 PanelWindow {
     id: root
 
@@ -14,12 +14,12 @@ PanelWindow {
     readonly property var cols: [2, 8, 8]
     property int tab: 0
     property int sel: 0
-    // ё → е: в словах CLDR «черный», а пишут и так и так
+    // ё → е: in CLDR words "black", but both spellings exist
     readonly property string query: input.text.toLowerCase().replace(/ё/g, "е")
 
     readonly property var lists: [Data.KAOMOJI, Data.EMOJI, Data.SYMBOLS]
-    // слова в charms.js уже строчные — без toLowerCase и деструктуризации: по 1900 эмодзи это кадр на каждую букву.
-    // Сам символ («Ω», «Ψ») — строчными, но только если слова не совпали
+    // words in charms.js are already lowercase — no toLowerCase and destructuring: 1900 emoji means one frame per letter.
+    // The symbol itself («Ω», «Ψ») — lowercase, but only if words didn't match
     readonly property var view: query ? lists[tab].filter(e => e[1].includes(query) || e[0].toLowerCase().includes(query)) : lists[tab]
     readonly property var cur: view[sel] ?? null
 
@@ -107,7 +107,7 @@ PanelWindow {
                         font: input.font
                         color: Theme.mute
                     }
-                    // ponytail: ←→ ходят по сетке, а не по тексту — запросы тут в одно слово
+                    // ponytail: ←→ move along grid, not text — queries here are single word
                     Keys.onPressed: e => {
                         const n = root.cols[root.tab];
                         if (e.key === Qt.Key_Escape) root.close();
@@ -151,8 +151,8 @@ PanelWindow {
                 Lb { id: hlab; text: root.tabs[root.tab] }
             }
 
-            // по сетке на вкладку, живут все три: Tab только прячет — пересборка плиток стоила кадры. Без запроса у всех
-            // полный список и от tab модели не зависят; поиск фильтрует только видимую
+            // grid per tab, all three live: Tab only hides — tile rebuild cost frames. Without query, all have
+            // full list and don't depend on tab model; search filters only visible
             Item {
                 id: grid
                 anchors { left: parent.left; leftMargin: 34; top: head.bottom; topMargin: 18; bottom: parent.bottom; bottomMargin: 34 }
@@ -184,8 +184,8 @@ PanelWindow {
                                 anchors { fill: parent; margins: 3 }
                                 radius: Math.min(width, height) / 2
                                 color: d.on ? Theme.fg : Theme.s2
-                                // Fit — лишние раскладки на каждой плитке; нужен длинным каомодзи и ZWJ-эмодзи: шрифт постарше
-                                // не склеит последовательность, и она развалится на 2–4 глифа шире клетки
+                                // Fit — extra layouts on each tile; needed for long kaomoji and ZWJ emoji: older font
+                                // won't join the sequence, and it breaks into 2–4 glyphs wider than cell
                                 Text {
                                     anchors { fill: parent; margins: 8 }
                                     text: d.modelData[0]
@@ -198,7 +198,7 @@ PanelWindow {
                                     color: d.on ? Theme.ink : Theme.fg
                                 }
                             }
-                            // клик — выбрать, по выбранной — скопировать
+                            // click — select, on chosen — copy
                             TapHandler { onTapped: d.on ? root.fire() : root.sel = d.index }
                             HoverHandler { cursorShape: Qt.PointingHandCursor }
                         }
@@ -206,7 +206,7 @@ PanelWindow {
                 }
             }
 
-            // выбранное крупно
+            // chosen large
             Rectangle {
                 id: card
                 anchors { left: grid.right; leftMargin: 24; right: parent.right; rightMargin: 34; top: head.top; bottom: parent.bottom; bottomMargin: 34 }

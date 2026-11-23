@@ -4,17 +4,17 @@ import Quickshell.Wayland
 import qs
 import qs.components
 
-// календарь и фокус-таймер: клик по часам бара. Панель 440 у бара (со стороны экрана), по центру — напротив часов, выезжает от бара.
-// Месяц сеткой 7×6 (сегодня — белый круг), стрелки и ←→ листают, клик по месяцу — обратно к сегодня. Ниже таймер:
-// кольцо точек заполняется по часовой, пресеты минут, старт/пауза (и пробел), сброс. Пока идёт — Glyph заливает нижнюю полосу.
-// Esc или клик мимо — закрыть
+// calendar and focus timer: click clock in bar. Panel 440 by bar (screen side), centered — opposite clock, slides from bar.
+// Month as 7×6 grid (today — white circle), arrows and ←→ leaf, click month — back to today. Below timer:
+// dot ring fills clockwise, minute presets, start/pause (and space), reset. While running — Glyph fills bottom bar.
+// Esc or click outside — close
 PanelWindow {
     id: root
 
     property bool open: false
     function toggle() { open = !open; }
     function close() { open = false; }
-    property int shift: 0 // месяцев от текущего
+    property int shift: 0 // months from current
     onOpenChanged: if (open) shift = 0
 
     property real t: open ? 1 : 0
@@ -31,7 +31,7 @@ PanelWindow {
     SystemClock { id: clock; precision: SystemClock.Hours }
     readonly property var en: Qt.locale("en_US")
     readonly property var month: new Date(clock.date.getFullYear(), clock.date.getMonth() + shift, 1)
-    readonly property int lead: (month.getDay() + 6) % 7 // дней прошлого месяца до понедельника
+    readonly property int lead: (month.getDay() + 6) % 7 // days of previous month until Monday
 
     Rectangle {
         anchors.fill: parent
@@ -43,7 +43,7 @@ PanelWindow {
     Stage {
         Rectangle {
             id: panel
-            // внутренний край пилюли бара (14 + 64) и зазор 14, выезжает от бара; поперёк — по центру, где часы
+            // inner edge of bar pill (14 + 64) and gap 14, slides from bar; across — centered, where clock is
             readonly property real off: 92 - 24 * (1 - root.t)
             readonly property bool onTop: Theme.state.barAt === "top"
             x: onTop ? (parent.width - width) / 2 : off
@@ -63,7 +63,7 @@ PanelWindow {
                 else return;
                 e.accepted = true;
             }
-            MouseArea { anchors.fill: parent } // клик по панели не закрывает
+            MouseArea { anchors.fill: parent } // click on panel doesn't close
 
             Column {
                 id: col

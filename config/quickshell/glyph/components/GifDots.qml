@@ -2,16 +2,16 @@ import QtQuick
 import qs
 import qs.services
 
-// гифка серой матрицей точек через шейдер обоев — плитка-кот дома без волны (миниатюры в настройках)
+// gif as gray dot matrix via wallpaper shader — home cat tile without wave (thumbnails in settings)
 Item {
     id: root
 
-    property string path // как в Gifs.list: "" — встроенный кот
+    property string path // as in Gifs.list: "" — built-in cat
     property color bg: Theme.s1
     property real pitch: 3
     property bool playing: true
 
-    // источник текстуры — сосед эффекта с opacity 0, см. Wall
+    // texture source — neighbor of effect with opacity 0, see Wall
     AnimatedImage { id: img; anchors.fill: fx; opacity: 0; source: Gifs.url(root.path); playing: root.playing }
     ShaderEffect {
         id: fx

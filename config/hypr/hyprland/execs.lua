@@ -2,17 +2,17 @@ local vars = require("variables")
 local fn   = require("hyprland.functions")
 
 hl.on("hyprland.start", function()
-    -- Shell: тот, что выбран в rice
+    -- Shell: the one selected in rice
     hl.exec_cmd(vars.rice .. " start")
 
-    -- во вложенной сессии системные демоны уже работают снаружи
+    -- in nested session system daemons already run outside
     if vars.nested then return end
 
     -- Keyring and auth
     hl.exec_cmd("gnome-keyring-daemon --start --components=secrets")
     hl.exec_cmd("/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1")
 
-    -- Bluetooth agent: без него BlueZ не спросит код сопряжения, и наушники вроде Ear (3) не спарятся из Quick
+    -- Bluetooth agent: without it BlueZ won't ask pairing code, and headphones like Ear (3) won't pair from Quick
     hl.exec_cmd("blueman-applet")
 
     -- Clipboard history
@@ -33,7 +33,7 @@ hl.on("hyprland.start", function()
     -- Forward bluetooth media commands to MPRIS
     hl.exec_cmd("mpris-proxy")
 
-    -- hypridle поднимает шелл (Rules.idle): тайминги из house rules → ~/.config/demonshot/hypridle.conf
+    -- hypridle brings up shell (Rules.idle): timings from house rules → ~/.config/demonshot/hypridle.conf
 end)
 
 -- Resizer listener

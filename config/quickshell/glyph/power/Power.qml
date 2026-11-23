@@ -6,8 +6,8 @@ import qs
 import qs.components
 import qs.services
 
-// меню питания: Super+Esc. Экран почти чёрный, слева столбец слов Doto: выбранное крупно с красной точкой, остальные Mute.
-// ↑↓ — слово плавно растёт и сжимается. Справа кольцо из 60 точек: аптайм (доля шестичасовой смены)
+// power menu: Super+Esc. Screen almost black, left column of Doto words: selected large with red dot, rest Mute.
+// ↑↓ — word grows and shrinks smoothly. Right ring of 60 dots: uptime (fraction of six-hour shift)
 PanelWindow {
     id: root
 
@@ -22,7 +22,7 @@ PanelWindow {
 
     function open() {
         sel = 2;
-        SysStats.sample(); // свежий аптайм
+        SysStats.sample(); // fresh uptime
         visible = true;
     }
     function close() { visible = false; }

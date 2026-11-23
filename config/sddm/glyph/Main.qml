@@ -1,13 +1,13 @@
 import QtQuick
 
-// glyph для SDDM: диск, как колесо режимов на камере, а внутри тахометр из глифов. Центр — на нижнем краю экрана:
-// видна верхняя половина, шкала — полукруг спидометра.
-// Старт — поэтапное включение, как приборка машины: красная точка, насечка обходит круг, глифы до упора и стрелка
-// туда-обратно (самотест), потом часы и сессии. Слева за насечкой — лог шагов.
-// Буквы пароля разгоняют стрелку, Enter — до отсечки, пока pam думает; не тот — красная вспышка и стрелка падает.
-// ←→ или колесо мыши — крутить диск (сессия), Tab — следующий пользователь, Shift+Tab или клик по имени — вписать своё,
-// Esc — стереть.
-// ↑ — второе кольцо, питание справа: там ←→ выбрать, Enter — выполнить, ↓ или Esc — назад, буква — назад к паролю
+// glyph for SDDM: disk like a mode wheel on camera, inside — tachometer from glyphs. Center — at bottom edge of screen:
+// upper half visible, scale — semicircle of speedometer.
+// Start — staged power-on, like car dashboard: red dot, knurl goes around circle, glyphs to the end and arrow
+// back and forth (self-test), then clock and sessions. Left of knurl — log of steps.
+// Password letters accelerate arrow, Enter — to redline, while PAM thinks; wrong one — red flash and arrow drops.
+// ←→ or mouse wheel — rotate disk (session), Tab — next user, Shift+Tab or click by name — type your own,
+// Esc — erase.
+// ↑ — second ring, power on right: there ←→ choose, Enter — execute, ↓ or Esc — back, letter — back to password
 Rectangle {
     id: root
 
@@ -31,11 +31,11 @@ Rectangle {
     property bool blink: true
     Timer { running: true; repeat: true; interval: 500; onTriggered: { root.blink = !root.blink; root.now = new Date(); } }
 
-    // ---- включение: шаги по очереди ----
-    property real knurl: 0 // насечка: доля обойдённого круга
-    property real test: 0  // самотест: глифы и стрелка до упора и назад
-    property real face: 0  // часы, сессии, имя
-    property int step: 0   // сколько шагов лога закончено
+    // ---- power-on: steps in order ----
+    property real knurl: 0 // knurl: fraction of circle passed
+    property real test: 0  // self-test: glyphs and arrow to the end and back
+    property real face: 0  // clock, sessions, name
+    property int step: 0   // how many log steps finished
     SequentialAnimation {
         running: true
         PauseAnimation { duration: 350 }
@@ -50,21 +50,21 @@ Rectangle {
         PropertyAction { target: root; property: "step"; value: 4 }
     }
 
-    // ---- тахометр ----
-    readonly property int n: 32 // глифов на шкале, по одному на букву
+    // ---- tachometer ----
+    readonly property int n: 32 // glyphs on scale, one per letter
     property bool busy: false
     property bool ok: false
     property bool flash: false
     property bool fail: false
     property real wave: 0
     NumberAnimation on wave { running: root.busy; from: 0; to: 1; duration: 600; loops: Animation.Infinite }
-    // куда тянет стрелку; стрелка догоняет пружиной — с перелётом, как настоящая. Цель не должна меняться каждый кадр:
-    // Behavior перезапустит пружину раньше её шага и стрелка встанет. Поэтому самотест (step < 3) идёт без пружины,
-    // а дрожь на отсечке прибавляется к углу, а не к цели
+    // where arrow pulls; arrow chases spring — with overshoot, like real one. Target shouldn't change every frame:
+    // Behavior will restart spring before its step and arrow will stop. So self-test (step < 3) goes without spring,
+    // and shake at redline adds to angle, not to target
     readonly property real level: ok ? 1 : busy ? 0.94 : Math.max(test, Math.min(pwd.text.length / n, 1))
     property real needle: level
     Behavior on needle { enabled: root.step >= 3; SpringAnimation { spring: 4; damping: 0.26; epsilon: 0.002 } }
-    function deg(v) { return -84 + 168 * v; } // 0…1 → угол от 12 часов по часовой, полукруг над краем экрана
+    function deg(v) { return -84 + 168 * v; } // 0…1 → angle from 12 o'clock clockwise, semicircle over screen edge
 
     SequentialAnimation {
         id: denied
@@ -75,32 +75,32 @@ Rectangle {
         PauseAnimation { duration: 90 }
     }
 
-    // ---- сессия: позиция диска ----
+    // ---- session: disk position ----
     property int si: sessionModel.lastIndex
-    readonly property real gap: 22 // градусов между сессиями на диске
+    readonly property real gap: 22 // degrees between sessions on disk
     property real rot: -si * gap
     Behavior on rot { SpringAnimation { spring: 5; damping: 0.35 } }
     function turn(d) { if (labels.count) si = (si + d + labels.count) % labels.count; }
 
-    // ---- второе кольцо: питание. pm — выбранное с клавиатуры, -1 — кольцо не выбрано ----
+    // ---- second ring: power. pm — chosen from keyboard, -1 — ring not chosen ----
     readonly property var power: [
         { t: "sleep", a: 37, can: sddm.canSuspend, go: () => sddm.suspend() },
         { t: "reboot", a: 52, can: sddm.canReboot, go: () => sddm.reboot() },
         { t: "power off", a: 68, can: sddm.canPowerOff, go: () => sddm.powerOff() }
     ]
     property int pm: -1
-    // следующее доступное от i в сторону d; нет такого — остаётся i
+    // next available from i in direction d; no such — stays i
     function next(i, d) {
         for (let j = i + d; j >= 0 && j < power.length; j += d) if (power[j].can) return j;
         return i;
     }
-    // стрелки и Enter на кольце — общие для обоих полей. true — клавиша съедена, поле её не увидит
+    // arrows and Enter on ring — shared for both fields. true — key swallowed, field won't see it
     function key(e) {
         if (pm >= 0) {
             if (e.key === Qt.Key_Left || e.key === Qt.Key_Right) pm = next(pm, e.key === Qt.Key_Right ? 1 : -1);
-            else if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter) { const p = power[pm]; pm = -1; p.go(); } // проснулись — кольцо отпущено, Enter будит, а не усыпляет снова
+            else if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter) { const p = power[pm]; pm = -1; p.go(); } // woke up — ring released, Enter wakes, not puts to sleep again
             else if (e.key === Qt.Key_Down || e.key === Qt.Key_Escape) pm = -1;
-            else if (e.key !== Qt.Key_Up) { pm = -1; return false; } // печатают — назад, буква уходит в поле
+            else if (e.key !== Qt.Key_Up) { pm = -1; return false; } // typing — back, letter goes to field
             return true;
         }
         if (e.key === Qt.Key_Up) { pm = next(-1, 1); return pm >= 0; }
@@ -108,7 +108,7 @@ Rectangle {
         return false;
     }
 
-    // ---- кто входит: имя — поле, список sddm его только заполняет (Tab). Вписать можно любого, в том числе скрытого ----
+    // ---- who logs in: name — field, sddm list only fills it (Tab). Can type anyone, including hidden ----
     property int ui: Math.max(0, userModel.lastIndex)
     function pick(d) {
         if (!names.count) return;
@@ -116,17 +116,17 @@ Rectangle {
         user.text = names.itemAt(ui).name;
     }
     Component.onCompleted: {
-        if (!user.text && names.count) user.text = names.itemAt(ui).name; // sddm не запомнил последнего — первый из списка
+        if (!user.text && names.count) user.text = names.itemAt(ui).name; // sddm didn't remember last — first from list
         (user.text ? pwd : user).forceActiveFocus();
     }
 
     property bool queued: false
-    property string msg // что сказал pam: «заблокирован после 3 попыток» у faillock
+    property string msg // what PAM said: "locked after 3 attempts" at faillock
     function login() {
         if (busy || ok) return;
         const who = user.text.trim();
         if (!who) { user.forceActiveFocus(); return; }
-        if (step < 4) { queued = true; return; } // Enter во время самотеста — войдём, как только он кончится
+        if (step < 4) { queued = true; return; } // Enter during self-test — will log in once it finishes
         queued = false;
         busy = true;
         fail = false;
@@ -141,14 +141,14 @@ Rectangle {
         function onInformationMessage(m) { root.msg = m; }
     }
 
-    // метка: Space Mono капсом, трекинг .14em, серая
+    // label: Space Mono caps, tracking .14em, gray
     component Lb: Text {
         property real px: 12
         font { family: mono.name; pixelSize: px; letterSpacing: px * 0.14; capitalization: Font.AllUppercase }
         color: root.grey
     }
-    // надпись по дуге: буквы по окружности радиуса r, середина — под углом a (градусы от 12 часов). Space Mono
-    // моноширинный — шаг у всех букв один. button — кликается (hit) и белеет под мышью
+    // text on arc: letters along circle of radius r, middle — at angle a (degrees from 12 o'clock). Space Mono
+    // monospace — step same for all letters. button — clickable (hit) and turns white under mouse
     component Arc: Item {
         id: arc
         property string text
@@ -157,7 +157,7 @@ Rectangle {
         property real px: 12
         property color color: root.grey
         property bool button: false
-        property int hov: 0 // сколько букв под мышью: уход с одной и приход на соседнюю приходят в любом порядке
+        property int hov: 0 // how many letters under mouse: leaving one and arriving at neighbor come in any order
         signal hit
         readonly property string up: text.toUpperCase()
         FontMetrics { id: fm; font { family: mono.name; pixelSize: arc.px } }
@@ -188,7 +188,7 @@ Rectangle {
             }
         }
     }
-    // точка на окружности радиуса r под углом a (градусы от 12 часов), центр детали — в этой точке, повёрнута по радиусу
+    // point on circle of radius r at angle a (degrees from 12 o'clock), center of detail — at that point, rotated by radius
     component Polar: Rectangle {
         property real a
         property real r
@@ -197,7 +197,7 @@ Rectangle {
         rotation: a
     }
 
-    // холст 1920×1080, растянут на экран
+    // canvas 1920×1080, stretched to screen
     Item {
         id: stage
         readonly property real s: Math.min(root.width / 1920, root.height / 1080)
@@ -210,7 +210,7 @@ Rectangle {
 
         MouseArea {
             anchors.fill: parent
-            property real acc: 0 // тачпад шлёт мелкие шаги — копим до щелчка
+            property real acc: 0 // touchpad sends small steps — accumulate until click
             onClicked: pwd.forceActiveFocus()
             onWheel: w => {
                 acc += w.angleDelta.y;
@@ -228,13 +228,13 @@ Rectangle {
             source: "data:image/svg+xml," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="1.5" fill="${root.s2}"/></svg>`)
         }
 
-        // ---- диск: всё меряется от центра ----
+        // ---- disk: everything measured from center ----
         Item {
             id: dial
             x: stage.width / 2
             y: stage.height
 
-            // вращается: насечка по краю и сессии
+                // rotates: knurl on edge and sessions
             Item {
                 rotation: root.rot
 
@@ -242,7 +242,7 @@ Rectangle {
                     model: 240
                     Polar {
                         required property int index
-                        // насколько фронт ушёл дальше этой риски: фронт обходит видимую половину от левого края до правого
+                        // how far front went past this tick: front walks visible half from left edge to right
                         readonly property real d: root.knurl - ((index * 1.5 + root.rot) % 360 + 450) % 360 / 180
                         a: index * 1.5
                         r: 760
@@ -258,7 +258,7 @@ Rectangle {
                     Arc {
                         required property int index
                         required property string name
-                        readonly property real off: Math.abs(((a + root.rot) % 360 + 540) % 360 - 180) // от метки, 0…180
+                        readonly property real off: Math.abs(((a + root.rot) % 360 + 540) % 360 - 180) // from label, 0…180
                         a: index * root.gap
                         r: 712
                         px: 14
@@ -271,7 +271,7 @@ Rectangle {
                 }
             }
 
-            // метка диска сверху, над ней — подсказка
+            // disk label top, hint above it
             Rectangle { x: -2.5; y: -808; width: 5; height: 24; radius: 2.5; color: root.fg; opacity: root.knurl }
             Arc {
                 r: 860
@@ -281,9 +281,9 @@ Rectangle {
                 text: `←→ · session      ${root.next(-1, 1) >= 0 ? "↑ · power      " : ""}tab · user      enter · start`
             }
 
-            // за насечкой по дуге: слева лог включения снизу вверх (шаг идёт — мигает, кончился — ok) и имя машины,
-            // справа раскладка и питание. Питание видно всегда: нельзя (или --test-mode, там демона нет и все can* — false) —
-            // тёмное и не кликается
+            // behind knurl along arc: left login log bottom-up (step goes — blinks, ended — ok) and machine name,
+            // right layout and power. Power always visible: cannot (or --test-mode, there's no daemon and all can* — false) —
+            // dark and not clickable
             Repeater {
                 model: ["dial", "glyph", "needle", "auth"]
                 Arc {
@@ -313,7 +313,7 @@ Rectangle {
                     onHit: modelData.go()
                 }
             }
-            // метка второго кольца: снаружи у выбранного, ездит, как метка диска
+            // second ring label: outside at chosen, moves like disk label
             Polar {
                 a: root.power[Math.max(0, root.pm)].a
                 r: 885
@@ -326,7 +326,7 @@ Rectangle {
                 Behavior on opacity { NumberAnimation { duration: 150 } }
             }
 
-            // шкала: глифы-капсулы, горят до стрелки. Отсечка — пока pam думает, по ним бежит провал
+            // scale: capsule glyphs, burn to arrow. Cutoff — while pam thinks, fail runs through them
             Repeater {
                 model: root.n
                 Polar {
@@ -356,7 +356,7 @@ Rectangle {
                 }
             }
 
-            // секунды: внутренняя дуга точек, той же ширины, что шкала
+            // seconds: inner dot arc, same width as scale
             Repeater {
                 model: 60
                 Polar {
@@ -371,7 +371,7 @@ Rectangle {
                 }
             }
 
-            // стрелка: от кольца секунд до шкалы, кончик красный
+            // arrow: from seconds ring to scale, red tip
             Item {
                 rotation: root.deg(root.needle + (root.busy ? 0.015 * Math.sin(root.wave * 4 * Math.PI) : 0))
                 opacity: root.step >= 1 ? 1 : 0
@@ -387,7 +387,7 @@ Rectangle {
                 }
             }
 
-            // первое, что загорается
+            // first to light up
             Rectangle {
                 x: -8; y: -200; width: 16; height: 16; radius: 8
                 color: root.red
@@ -400,7 +400,7 @@ Rectangle {
                 y: -262
                 opacity: root.face
                 Repeater {
-                    // "h" без AP в формате у Qt всё равно 0…23 — 12-часовое считаем сами
+                    // "h" without AP in Qt format is still 0…23 — we compute 12-hour ourselves
                     model: [config.boolValue("clock24") ? Qt.formatTime(root.now, "hh") : String(root.now.getHours() % 12 || 12), ":", Qt.formatTime(root.now, "mm")]
                     Text {
                         required property string modelData
@@ -422,8 +422,8 @@ Rectangle {
                 opacity: root.face
             }
 
-            // под часами — кто входит и что происходит
-            Repeater { id: names; model: userModel; Item { required property string name } } // логины для Tab
+            // under the clock — who's logging in and what's happening
+            Repeater { id: names; model: userModel; Item { required property string name } } // logins for Tab
             TextInput {
                 id: user
                 x: -width / 2
@@ -438,10 +438,10 @@ Rectangle {
                 selectionColor: root.s3
                 selectedTextColor: root.fg
                 Lb { anchors.centerIn: parent; visible: !parent.text; text: "user" }
-                onActiveFocusChanged: if (activeFocus) selectAll() // начали печатать — имя заменяется целиком
+                onActiveFocusChanged: if (activeFocus) selectAll() // started typing — name is replaced entirely
                 onAccepted: pwd.forceActiveFocus()
                 Keys.onPressed: e => {
-                    if (root.pm < 0 && (e.key === Qt.Key_Left || e.key === Qt.Key_Right)) return; // поле видно — стрелки двигают курсор, не диск
+                    if (root.pm < 0 && (e.key === Qt.Key_Left || e.key === Qt.Key_Right)) return; // field visible — arrows move cursor, not disk
                     if (root.key(e)) e.accepted = true;
                     else if (e.key === Qt.Key_Tab || e.key === Qt.Key_Backtab) { pwd.forceActiveFocus(); e.accepted = true; }
                 }
@@ -459,7 +459,7 @@ Rectangle {
             }
         }
 
-        // ввод — настоящий TextInput (раскладки, IME), только невидимый
+        // input — real TextInput (layouts, IME), just invisible
         TextInput {
             id: pwd
             width: 1
@@ -469,19 +469,19 @@ Rectangle {
             echoMode: TextInput.Password
             onTextEdited: root.fail = false
             onAccepted: root.login()
-            // курсор в невидимом поле не нужен — стрелки отданы диску и кольцу
+            // cursor not needed in invisible field — arrows given to disk and ring
             Keys.onPressed: e => {
                 if (root.key(e)) e.accepted = true;
                 else if (e.key === Qt.Key_Escape) { text = ""; e.accepted = true; }
                 else if (e.key === Qt.Key_Tab || e.key === Qt.Key_Backtab) {
                     if (e.key === Qt.Key_Tab && names.count > 1) root.pick(1);
-                    else user.forceActiveFocus(); // один в списке или Shift+Tab — вписать имя
+                    else user.forceActiveFocus(); // only one in list or Shift+Tab — enter name
                     e.accepted = true;
                 }
             }
         }
 
-        // углы сверху: слева марка, справа индикаторы — точка горит, пока клавиша включена
+        // corners top: left mark, right indicators — dot glows while key on
         Column {
             x: 44
             y: 36

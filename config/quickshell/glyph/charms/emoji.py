@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# перегенерировать EMOJI в charms.js: python3 emoji.py [макс. версия Emoji, по умолчанию 17.0 — дальше Noto не рисует]
-# Unicode emoji-test.txt (fully-qualified, без оттенков кожи) + слова CLDR en/ru. Слова, что уже есть в таблице
-# (свои, ручные), остаются. ё → е: поиск в Charms.qml сводит ё к е и в запросе
+# regenerate EMOJI in charms.js: python3 emoji.py [max Emoji version, default 17.0 — Noto doesn't render beyond]
+# Unicode emoji-test.txt (fully-qualified, no skin tones) + CLDR words en/ru. Words already in table
+# (own, manual), remain. ё → е: search in Charms.qml folds ё to е in query too
 import json, re, sys, urllib.request
 from pathlib import Path
 

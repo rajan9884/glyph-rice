@@ -2,9 +2,9 @@ import QtQuick
 import qs
 import qs.components
 
-// образец (Theme.styles): круг fill, в нём акцент (dot), под ним имя; amount — кольцо точек вокруг, доля цвета у варианта, как
-// Glyph-шкала. Фокус — белое кольцо, что стоит — точка в центре. Клик, ↵, пробел — поставить, ←→ — соседний. Наведение
-// ставит фокус, как в Power: курсор один, ↵ ставит то, что на макете. peek — в фокусе: STYLE рисует его палитру на макете
+// sample (Theme.styles): circle fill, accent in it (dot), name below; amount — dot ring around, color share of variant, like
+// Glyph scale. Focus — white ring, placed — dot in center. Click, ↵, space — place, ←→ — neighbor. Hover
+// sets focus, like Power: one cursor, ↵ places what's on layout. peek — in focus: STYLE draws its palette on layout
 Column {
     id: root
 
@@ -29,7 +29,7 @@ Column {
         Ring {
             visible: root.item.amount !== undefined
             anchors.fill: parent
-            n: visible ? 24 : 0 // кольцо — только у вариантов, остальным не держать 24 точки
+            n: visible ? 24 : 0 // ring — only for variants, others don't hold 24 dots
             dot: 3
             f: root.item.amount ?? 0
             on: root.item.dot ?? Theme.fg
@@ -49,7 +49,7 @@ Column {
             height: width
             radius: width / 2
             color: root.item.fill ?? Theme.s2
-            border { width: 1; color: Theme.s3 } // чёрный образец на чёрном
+            border { width: 1; color: Theme.s3 } // black sample on black
             Behavior on color { ColorAnimation { duration: Theme.t } }
             Rectangle {
                 id: inner

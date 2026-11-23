@@ -6,32 +6,32 @@ import qs
 import qs.components
 import qs.services
 
-// deck: дашборд снизу по центру, как у caelestia, только из-под нижнего края. Курсор у края (полоса 2 px) 150 мс —
-// панель выезжает, ушёл с неё — через 300 мс прячется. Секции — Theme.state.deck по порядку (id из Theme.decks), колонками.
-// Без scrim и клавиатуры: подсмотреть и уйти. Окно на каждом экране, открыто не больше одного
+// deck: dashboard bottom center, like caelestia, only from bottom edge. Cursor at edge (2 px strip) 150 ms —
+// panel slides out, left it — hides in 300 ms. Sections — Theme.state.deck in order (ids from Theme.decks), columns.
+// No scrim and keyboard: peek and leave. Window on each screen, open no more than one
 Scope {
     id: root
 
-    property var on: null // экран, где открыта
+    property var on: null // screen where open
     function toggle() { on = on ? null : Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]; }
 
     readonly property var ids: Theme.state.deck.filter(id => Theme.decks.includes(id))
-    readonly property int h: 232 // высота секций в пикселях макета
+    readonly property int h: 232 // section height in layout pixels
 
-    // открыта — подробный опрос (detailed ставит Home по deckOpen) и процессы с частотой
+    // open — detailed poll (detailed sets Home by deckOpen) and processes with frequency
     Binding { target: Sys; property: "deckOpen"; value: root.on !== null }
     Binding { target: SysStats; property: "perf"; value: root.on !== null }
 
     SystemClock { id: clock; precision: SystemClock.Minutes }
     readonly property var en: Qt.locale("en_US")
     function hm(d) { return Qt.formatTime(d, Theme.state.clock24 ? "hh:mm" : "h:mm ap"); }
-    function week(d) { // ISO-неделя, как в Home
+    function week(d) { // ISO week, like Home
         const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
         t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
         return Math.ceil(((t - Date.UTC(t.getUTCFullYear(), 0, 1)) / 86400000 + 1) / 7);
     }
 
-    // сеть за 40 с — столбцы матрицы, [rx, tx]. Свой такт: SysStats пишет rx/tx раз в те же 2 с
+    // net in 40 s — matrix columns, [rx, tx]. Own tick: SysStats writes rx/tx every same 2 s
     property var net: []
     Timer { running: root.on !== null; interval: 2000; repeat: true; onTriggered: root.net = root.net.concat([[SysStats.rx, SysStats.tx]]).slice(-20) }
 
@@ -47,25 +47,25 @@ Scope {
             Behavior on t { NumberAnimation { duration: Theme.t; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.glide } }
 
             screen: modelData
-            // в фулскрине Top не рисуется, Qt не коммитит кадры и смену слоя Hyprland не видит — полосы там нет,
-            // Super+Space создаёт окно заново, уже в Overlay. ponytail: hasFullscreen — и maximized (Super+Alt+F), край там тоже молчит
+// in fullscreen Top not drawn, Qt doesn't commit frames and layer change Hyprland doesn't see — strips there not,
+// Super+Space creates window anew, already in Overlay. ponytail: hasFullscreen — and maximized (Super+Alt+F), edge there also silent
             visible: Theme.state.deckHover && root.ids.length > 0 && !Hyprland.monitorFor(modelData)?.activeWorkspace?.hasFullscreen || t > 0
             anchors.bottom: true
             implicitWidth: Math.ceil(panel.width * Theme.s)
             implicitHeight: Math.ceil((panel.height + 14) * Theme.s)
             exclusionMode: ExclusionMode.Ignore
             color: "transparent"
-            // закрыта — Top: Glyph-полоса прогресса поверх; открыта — Overlay, видна и над полноэкранным окном
+            // closed — Top: Glyph progress bar over; open — Overlay, visible over fullscreen window
             WlrLayershell.layer: t > 0 ? WlrLayer.Overlay : WlrLayer.Top
             WlrLayershell.namespace: "glyph-deck"
-            // закрыта — мышь ловит только полоса у края (углы экрана свободны), открыта — всё окно вместе со щелью под панелью
+            // closed — mouse caught only by strip at edge (screen corners free), open — whole window together with gap under panel
             mask: Region { y: win.open ? 0 : win.height - 2; width: win.width; height: win.open ? win.height : 2 }
 
             Timer { id: dwell; interval: 150; onTriggered: root.on = win.modelData }
             Timer { id: leave; interval: 300; onTriggered: if (win.open) root.on = null }
 
             Stage {
-                // полоса и панель — одно окно: курсор не перескакивает между поверхностями, hovered не мигает
+                // strip and panel — one window: cursor doesn't jump between surfaces, hovered doesn't flicker
                 HoverHandler {
                     onHoveredChanged: {
                         if (hovered) {
@@ -81,10 +81,10 @@ Scope {
                 Rectangle {
                     id: panel
                     anchors.horizontalCenter: parent.horizontalCenter
-                    y: (1 - win.t) * (height + 14) // выезжает из-под края
+                    y: (1 - win.t) * (height + 14) // slides out from under edge
                     width: row.width + 52
                     height: root.h + 52
-                    opacity: win.t // не visible: у скрытого Row ширина 0, а по ней меряется окно
+                    opacity: win.t // not visible: hidden Row width 0, and window measured by it
                     radius: Theme.corner(40)
                     color: Theme.s1
                     border { width: 1; color: Theme.s2 }
@@ -101,7 +101,7 @@ Scope {
                                 required property string modelData
                                 required property int index
                                 spacing: 16
-                                // между секциями — столбик точек
+                                // column of dots between sections
                                 Image {
                                     visible: cell.index > 0
                                     width: 4
@@ -116,7 +116,7 @@ Scope {
                 }
             }
 
-            // часы, дата, неделя; световой день сегментами от восхода до заката
+            // clock, date, week; daylight hours segments from sunrise to sunset
             Component {
                 id: clockC
                 Column {
@@ -139,7 +139,7 @@ Scope {
                 }
             }
 
-            // сейчас крупно и четыре дня вперёд, глифы через маску точек
+            // now large and four days forward, glyphs via dot mask
             Component {
                 id: weatherC
                 Column {
@@ -184,7 +184,7 @@ Scope {
                 }
             }
 
-            // кольца cpu/mem/gpu с температурами, топ процессов сегментами, ядра матрицей
+            // rings cpu/mem/gpu with temps, top processes as segments, cores matrix
             Component {
                 id: perfC
                 Column {
@@ -217,15 +217,15 @@ Scope {
                             width: 126
                             spacing: 6
                             Lb { text: `cores · ${SysStats.cpuFreq.toFixed(1)} ghz`; px: 10 }
-                            // столбец на ядро: верхняя точка белая, под ней серые — как график cpu в Home
+                            // column per core: top point white, gray below — like cpu graph in Home
                             Grid {
                                 id: cores
                                 readonly property int n: Math.max(1, SysStats.cores.length)
-                                // высота в бюджете root.h=232: 109 кольца + 18 отступ + 19 подпись → сетке ≤86, иначе вылезает из панели
-                                // d от ширины колонки (126, стабильна), а не своей — иначе петля d↔width и сетка схлопывается в 0
+                                // height in root.h=232 budget: 109 ring + 18 gap + 19 label → grid ≤86, else pops out of panel
+                                // d from column width (126, stable), not its own — otherwise d↔width loop and grid collapses to 0
                                 readonly property real d: Math.min((126 - (n - 1) * spacing) / n, (86 - 7 * spacing) / 8)
                                 width: n * d + (n - 1) * spacing
-                                // уже колонки — центрируем саму сетку: зазора справа нет, по бокам ровно
+                                // already columns — center grid itself: no gap right, sides even
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 columns: n
                                 spacing: 3
@@ -233,7 +233,7 @@ Scope {
                                     model: cores.n * 8
                                     Rectangle {
                                         required property int index
-                                        readonly property int up: 8 - Math.floor(index / cores.n) // 8 сверху … 1 снизу
+                                        readonly property int up: 8 - Math.floor(index / cores.n) // 8 from top … 1 from bottom
                                         readonly property int lvl: Math.round(1 + 7 * (SysStats.cores[index % cores.n] ?? 0))
                                         width: cores.d
                                         height: cores.d
@@ -247,7 +247,7 @@ Scope {
                 }
             }
 
-            // приём/отдача Doto и 40 с матрицей: приём растёт вверх от середины, отдача (серая) — вниз
+            // receive/send Doto and 40 s matrix: receive grows up from middle, send (gray) — down
             Component {
                 id: netC
                 Column {
@@ -260,7 +260,7 @@ Scope {
                     Item { width: 1; height: 18 }
                     Grid {
                         id: hist
-                        // шкала — пик окна, но не меньше 10 kb/s: тишина не рисует шум
+                        // scale — window peak, but not less 10 kb/s: silence doesn't draw noise
                         readonly property real peak: Math.max(10240, ...root.net.map(p => Math.max(p[0], p[1])))
                         readonly property real d: (width - 19 * spacing) / 20
                         width: parent.width
@@ -270,7 +270,7 @@ Scope {
                             model: 20 * 10
                             Rectangle {
                                 required property int index
-                                readonly property int r: Math.floor(index / 20) // 0…9 сверху вниз
+                                readonly property int r: Math.floor(index / 20) // 0…9 from top to bottom
                                 readonly property bool tx: r >= 5
                                 readonly property var p: root.net[index % 20 - 20 + root.net.length] ?? [0, 0]
                                 readonly property bool lit: (tx ? r - 4 : 5 - r) <= Math.ceil(5 * (tx ? p[1] : p[0]) / hist.peak)
@@ -284,7 +284,7 @@ Scope {
                 }
             }
 
-            // плеер: обложка точками крутится, пока играет и deck открыта
+            // player: cover in dots spins while playing and deck open
             Component {
                 id: mediaC
                 Column {
@@ -318,7 +318,7 @@ Scope {
                         }
                     }
                     Item { width: 1; height: 16 }
-                    // firefox длину не шлёт
+                    // firefox doesn't send length
                     Seg { width: parent.width; height: 6; n: 20; f: Media.player?.lengthSupported && Media.player.length > 0 ? Media.position / Media.player.length : 0 }
                     Item {
                         width: parent.width
@@ -334,7 +334,7 @@ Scope {
         }
     }
 
-    // кольцо с числом внутри и подписью; on — точки загораются волной при открытии
+    // ring with number inside and label; on — dots light up in wave on open
     component Gauge: Column {
         id: g
         property real f
@@ -350,7 +350,7 @@ Scope {
         }
         Lb { anchors.horizontalCenter: parent.horizontalCenter; text: g.label; px: 10 }
     }
-    // скорость: стрелка, число Doto, единица меткой
+    // speed: arrow, Doto number, unit as label
     component Speed: Row {
         id: sp
         property string icon

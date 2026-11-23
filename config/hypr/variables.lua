@@ -1,11 +1,11 @@
 local scheme = require("scheme.demonshot")
 local home   = os.getenv("HOME")
 
--- DEMONSHOT_NESTED=1 Hyprland -c …/rice/config/hypr/hyprland.lua — вложенная сессия для отладки:
--- системные демоны уже работают снаружи
+-- DEMONSHOT_NESTED=1 Hyprland -c …/rice/config/hypr/hyprland.lua — nested session for debugging:
+-- system daemons already run outside
 local nested = os.getenv("DEMONSHOT_NESTED") ~= nil
--- какой шелл живой (demonshot, glyph…), решает rice: `rice switch <имя>` или приложение Rice.
--- Путь полный: ~/.local/bin в PATH у hypr нет
+-- which shell is alive (demonshot, glyph…), decided by rice: `rice switch <name>` or Rice app
+-- full path: ~/.local/bin not in hypr's PATH
 local rice   = home .. "/.config/quickshell/rice/rice"
 
 return {
@@ -17,16 +17,16 @@ return {
 
     -- Shell
     rice                       = rice,
-    lockCmd                    = rice .. " lock", -- лок текущего шелла; второй не запускает
+    lockCmd                    = rice .. " lock", -- lock current shell; second one won't start
 
     -- Apps
-    terminal                   = "kitty", -- не -1: общий процесс, сломав GL после сна (AMD и Intel), белил все новые окна до перезагрузки (#12); цена — ~230 мс вместо ~20
+    terminal                   = "kitty", -- not -1: shared process, broke GL after sleep (AMD and Intel), whitened all new windows until reboot (#12); cost — ~230ms vs ~20
     browser                    = "zen-browser",
     fileExplorer               = "thunar",
     audioSettings              = "pavucontrol",
-    -- программы спец-воркспейсов (запускаются, если там пусто) и редактор. Бинды читают их при нажатии,
-    -- так что свои — в user.lua: require("variables").apps.editor = "codium". Не установлено — откроется пустой
-    -- воркспейс. telegram и spotify ставит install.sh --with
+    -- special workspace apps (launch if empty) and editor. Binds read them on press,
+    -- so custom ones go in user.lua: require("variables").apps.editor = "codium". Not set — opens empty workspace.
+    -- telegram and spotify installed by install.sh --with
     apps                       = {
         sysmon        = "kitty --class btop -T btop btop",
         music         = "spotify-launcher",
@@ -50,7 +50,7 @@ return {
     blurXray                   = false,
 
     -- Shadow
-    -- лёгкое красное свечение у фокуса
+    -- soft red glow on focus
     shadowEnabled              = true,
     shadowRange                = 10,
     shadowRenderPower          = 4,
@@ -76,7 +76,7 @@ return {
     volumeMax                  = 100,
     cursorTheme                = "Bibata-Modern-Classic",
     cursorSize                 = 23,
-    sleepGestureCmd            = "systemctl suspend-then-hibernate || systemctl suspend", -- нет гибернации — обычный сон
+    sleepGestureCmd            = "systemctl suspend-then-hibernate || systemctl suspend", -- no hibernation — regular sleep
 
     ------------------
     ---- KEYBINDS ----
@@ -100,7 +100,7 @@ return {
     kbMoveWindow               = "SUPER + Z",
     kbResizeWindow             = "SUPER + X",
     kbWindowPip                = "SUPER + ALT + backslash",
-    kbPinWindow                = "SUPER + SHIFT + P", -- Super+P — vpn-договор
+    kbPinWindow                = "SUPER + SHIFT + P", -- Super+P — VPN agreement
     kbWindowFullscreen         = "SUPER + F",
     kbWindowBorderedFullscreen = "SUPER + ALT + F",
     kbToggleWindowFloating     = "SUPER + ALT + space",

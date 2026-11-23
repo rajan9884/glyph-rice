@@ -1,5 +1,5 @@
 //@ pragma IconTheme Rice
-// тема значков своя, а не из qtengine: не загрузился он — Qt ищет только в hicolor, и у kcalc и т.п. пустые круги (#11)
+// own icon theme, not qtengine: not loaded — Qt searches only hicolor, and kcalc etc. empty circles (#11)
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
@@ -20,9 +20,9 @@ import "shot"
 import "vpn"
 import "wall"
 
-// glyph: rice в духе nothing os. Дом на обоях, бар, лаунчер, быстрые настройки,
-// Glyph-полосы по краям вместо OSD, остров уведомлений, меню питания, настройки, deck (дашборд снизу), буфер обмена, чары (эмодзи и символы), скриншоты, vpn, обои. Блокировка — отдельный процесс (lock.qml).
-// Переключается с demonshot через `rice switch` / приложение Rice — бинды hypr общие (shell:*), каждый шелл берёт свои
+// glyph: rice in nothing os spirit. Home on wallpaper, bar, launcher, quick settings,
+// Glyph bars at edges instead of OSD, notification island, power menu, settings, deck (dashboard bottom), clipboard, charms (emoji and symbols), screenshots, vpn, wallpaper. Lock — separate process (lock.qml).
+// Switches with demonshot via `rice switch` / Rice app — hypr binds shared (shell:*), each shell takes its own
 ShellRoot {
     id: shell
 
@@ -51,8 +51,8 @@ ShellRoot {
             id: s
             required property var modelData
             Back { screen: s.modelData }
-            // бар и дом можно снять с экрана (настройки → display), обои остаются. Здесь, а не в окне: visible от своего
-            // screen — петля (окно пересоздаётся, screen меняется)
+            // bar and home can be removed from screen (settings → display), wallpaper stays. Here, not in window: visible from own
+            // screen — loop (window recreated, screen changes)
             Home { screen: s.modelData; visible: Theme.scr(s.modelData.name, "home") }
             Hot { screen: s.modelData; onTriggered: quick.peek() }
             Bar {
@@ -66,17 +66,17 @@ ShellRoot {
         }
     }
 
-    // hypr как у demonshot: его Rules (settings/Rules.qml, тот же ~/.config/demonshot/rules.json) ставит монитор, ввод,
-    // движение, ночник и hypridle; сверху Theme.apply — свои цвета рамок, скругление и kitty. Его же зовём при смене темы
+// hypr like demonshot: its Rules (settings/Rules.qml, same ~/.config/demonshot/rules.json) sets monitor, input,
+// motion, night and hypridle; on top Theme.apply — own border colors, rounding and kitty. We call it on theme change
     Component.onCompleted: {
         hypr();
-        if (Theme.state.paint) Theme.apps(); // rice start ставит ссылки на term/ — цвет надо вернуть
+        if (Theme.state.paint) Theme.apps(); // rice start sets links to term/ — color must be returned
         Rules.night();
         Rules.idle();
     }
-    // то, что живёт в конфиге hypr. Он перечитывает его сам: сохранили любой файл hypr (ссылки живые — и git pull, и смена
-    // ветки), hyprctl reload — и возвращает умолчания variables.lua: рамки demonshot, монитор, ввод, анимации. Накладываем
-    // своё заново. hyprctl eval configreloaded не шлёт — петли нет. Ночник и hypridle — свои процессы, reload их не трогает
+    // what lives in hypr config. It re-reads it itself: saved any hypr file (live links — git pull and branch switch), hyprctl reload —
+// branch), hyprctl reload — returns variables.lua defaults: demonshot borders, monitor, input, animations. Overlay ours again.
+// hyprctl eval configreloaded doesn't send — no loop. Night and hypridle — own processes, reload doesn't touch them
     function hypr() {
         Rules.monitor();
         Rules.input();
@@ -87,7 +87,7 @@ ShellRoot {
         target: Hyprland
         function onRawEvent(e) { if (e.name === "configreloaded") shell.hypr(); }
     }
-    // подключили экран — его масштаб и герцы из prefs → display (Rules.store.outs)
+    // screen connected — its scale and hertz from prefs → display (Rules.store.outs)
     Connections {
         target: Quickshell
         function onScreensChanged() { Rules.monitor(true); }
@@ -96,11 +96,11 @@ ShellRoot {
         target: Theme
         function onGreysChanged() { paint.restart(); }
     }
-    // сменились тема или цвет (style, новые обои) — окна, kitty, gtk и qt. Через 300 мс: тона новых обоев приходят не сразу,
-    // а gtk не стоит дёргать дважды
+// theme or color changed (style, new wallpaper) — windows, kitty, gtk and qt. In 300 ms: new wallpaper tones don't come immediately,
+// and gtk not worth poking twice
     Timer { id: paint; interval: 300; onTriggered: { Theme.apply(); Theme.apps(); } }
-    // тона обоев (Theme.pick) — здесь, не в Theme: его грузит и лок, ему хватает готовых из glyph.json. Пусто — копия обоев не
-    // загрузилась (серые дают 16 цветов): старые тона остаются. Новые обои — с первого тона
+    // wallpaper tones (Theme.pick) — here, not in Theme: lock loads it, it has ready ones from glyph.json. Empty — wallpaper copy not
+    // loaded (grays give 16 colors): old tones remain. New wallpaper — from first tone
     ColorQuantizer {
         source: Theme.url(Theme.wallSrc(Theme.wall))
         depth: 4
@@ -117,15 +117,15 @@ ShellRoot {
         target: Theme.state
         function onRoundingChanged() { Theme.apply(); }
     }
-    // режим ultra включает/снимает blur и тени поверх настроек — окна перекрасить (герцы и движение ставит сам Rules.setMode).
-    // Игровой — то же и ещё анимации
+    // ultra mode toggles blur and shadows over settings — windows repaint (hertz and motion set by Rules.setMode itself).
+    // Game — same plus animations
     Connections {
         target: Rules.store
         function onUltraChanged() { Theme.apply(); }
         function onGameChanged() { Rules.motion(); Theme.apply(); }
     }
 
-    // тап Super — лаунчер на отпускании; любой Super+<key> по пути шлёт interrupt, и лаунчер не открывается
+    // Super tap — launcher on release; any Super+<key> along the way sends interrupt, launcher doesn't open
     property bool interrupted: false
     Shortcut {
         name: "launcher"
@@ -137,10 +137,10 @@ ShellRoot {
     }
     Shortcut { name: "launcherArm"; description: "Super pressed — reset interrupt"; onPressed: shell.interrupted = false }
     Shortcut { name: "launcherInterrupt"; description: "Super+<key> — don't open the launcher"; onPressed: shell.interrupted = true }
-    // Super+Space (алтарь у demonshot) — deck, дашборд снизу: лаунчер и так на тапе Super
+    // Super+Space (altar at demonshot) — deck, bottom dashboard: launcher already on Super tap
     Shortcut { name: "altar"; description: "deck: bottom dashboard"; onPressed: deck.toggle() }
     Shortcut { name: "quick"; description: "quick settings"; onPressed: quick.toggle() }
-    Shortcut { name: "ward"; description: "quick settings"; onPressed: quick.toggle() } // Super+N у demonshot — те же тумблеры
+    Shortcut { name: "ward"; description: "quick settings"; onPressed: quick.toggle() } // Super+N at demonshot — same toggles
     Shortcut { name: "settings"; description: "settings"; onPressed: prefs.toggle() }
     Shortcut { name: "power"; description: "power menu"; onPressed: power.visible ? power.close() : power.open() }
     Shortcut { name: "shot"; description: "screenshot"; onPressed: shot.open() }

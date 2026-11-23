@@ -9,24 +9,24 @@ import qs.components
 import qs.services
 import qs.settings
 
-// настройки glyph: Super+I. Не форма, а предметы. Слева столбец слов Doto, как в меню питания, — выбранное крупно, с красной
-// точкой. Справа раздел вживую: дом — макет бенто 3 × 3, deck — экран с панелью у края, окна — рабочий стол с зазорами,
-// простой — шкала минут, по которой гаснет экран. Числа — кольца точек (тянуть по кругу, колесо), тумблеры — пилюли,
-// где выезжает белое. ↑↓ — разделы, Tab — по предметам, ←→ — менять, esc — закрыть.
-// Всё сразу в деле: Theme.state (glyph.json) и Rules.store (rules.json, общий с demonshot) + нужный apply.
-// Зазоры/рамка/blur/тени — через Theme.apply: Rules.windows() вернул бы окнам вид demonshot
+// settings glyph: Super+I. Not a form, but items. Left — column of Doto words, like power menu, — chosen large with red
+// dot. Right — section live: home — bento layout 3 × 3, deck — screen with panel at edge, windows — desktop with gaps,
+// idle — minute scale by which screen dims. Numbers — dot rings (drag around circle, wheel), toggles — pills,
+// where white pops out. ↑↓ — sections, Tab — by items, ←→ — change, esc — close.
+// Everything at once: Theme.state (glyph.json) and Rules.store (rules.json, shared with demonshot) + needed apply.
+// Gaps/border/blur/shadow — via Theme.apply: Rules.windows() would give windows demonshot look
 PanelWindow {
     id: root
 
     property int sel: 0
-    signal wallRequested // обои — свой экран (wall/Walls), его открывает shell.qml
+    signal wallRequested // wallpaper — own screen (wall/Walls), shell.qml opens it
     readonly property var sections: ["HOME", "DECK", "BAR", "LOOK", "STYLE", "WINDOWS", "DISPLAY", "AUDIO", "POWER", "INPUT", "IDLE", "SHELL"]
     readonly property string moves: "shift ←→ move · ↵ swap · del drop · drag"
     readonly property string rings: "drag round the rings · scroll"
     readonly property var hints: [moves, moves, moves, "", "hover to preview · ↵ or click sets it", rings, "drag a screen to move it · " + rings, "click or ←→ a device", "↵ or click a mode", rings, "drag the marks", ""]
     readonly property var r: Rules.store
 
-    // глифы видов дома, секций deck и трея бара
+    // glyphs of home widgets, deck sections and bar tray
     readonly property var icons: ({
         weather: "\u{F0595}", calendar: "\u{F00ED}", cpu: "\u{F061A}", ram: "\u{F035B}", gpu: "\u{F08AE}", disk: "\u{F02CA}",
         battery: "\u{F0079}", buds: "\u{F02CB}", player: "\u{F040A}", system: "\u{F0128}", cat: "\u{F011B}", cava: "\u{F0EA2}",
@@ -34,10 +34,10 @@ PanelWindow {
         layout: "\u{F030C}", wifi: "\u{F05A9}", bluetooth: "\u{F00AF}", sound: "\u{F057E}", notes: "\u{F009A}",
         mode: "\u{F04C5}", power: "\u{F0425}"
     })
-    // круглые виджеты дома, остальные — квадрат 40. ponytail: ram/gpu/disk/battery — догадка (кольца); решит Home — поправить
+    // round widgets of home, rest — square 40. ponytail: ram/gpu/disk/battery — guess (rings); Home will decide — fix
     readonly property var rounds: ["weather", "cpu", "ram", "gpu", "disk", "battery", "buds", "cava"]
 
-    // ---- открытие: сам себе анимация (у слоёв glyph в hypr no_anim). Раздел помнится между открытиями ----
+    // ---- opening: animates itself (glyph layers in hypr no_anim). Section remembered between openings ----
     property bool shown: false
     property real t: shown ? 1 : 0
     Behavior on t { NumberAnimation { duration: Theme.t; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.glide } }
@@ -50,18 +50,18 @@ PanelWindow {
     function toggle() { shown ? close() : open(); }
     function go(i) {
         sel = (i + sections.length) % sections.length;
-        stage.forceActiveFocus(); // фокус в скрытом разделе потерялся бы
+        stage.forceActiveFocus(); // focus in hidden section would be lost
     }
 
-    // экран, который настраивают DISPLAY и HOME: открылись — тот, где фокус; его отключили — первый
+    // screen configured by DISPLAY and HOME: opened — one with focus; disabled — first
     property string pickMon
     readonly property var names: Quickshell.screens.map(s => s.name)
     readonly property string mon: names.includes(pickMon) ? pickMon : names[0] ?? ""
     readonly property bool multi: names.length > 1
-    onMonChanged: home.cur = 0 // у другого экрана свой набор — курсор с прошлого мимо
+    onMonChanged: home.cur = 0 // other screen has its own set — cursor from past misses
 
-    // ---- списки id в Theme.state: виджеты дома, секции deck, трей бара. Правим копию — JsonAdapter пишет файл на присваивание.
-    // Все возвращают новый курсор. Виджеты — экрана mon: экранов несколько — правка даёт ему свой набор, пока не правили — общий ----
+    // ---- id lists in Theme.state: home widgets, deck sections, bar tray. We edit copy — JsonAdapter writes file on assignment.
+    // All return new cursor. Widgets — of screen mon: several screens — edit gives it its own set, until not edited — common ----
     function list(key) { return key === "widgets" ? Theme.scr(mon, "widgets") : Theme.state[key]; }
     function edit(key, f) {
         const a = list(key).slice();
@@ -80,7 +80,7 @@ PanelWindow {
         edit(key, a => a.splice(i, 1));
         return Math.max(0, Math.min(i, n - 2));
     }
-    // ↵ на выбранном: следующий из all, которого ещё нет. В пустом списке — первый свободный
+    // ↵ on chosen: next from all not yet present. In empty list — first free
     function cycle(key, i, all) {
         const a = list(key);
         if (all.every(k => a.includes(k))) return i;
@@ -90,7 +90,7 @@ PanelWindow {
         edit(key, b => b[i] = all[j]);
         return i;
     }
-    // лоток: есть — убрать, нет — поставить за выбранным
+    // tray: present — remove, absent — put after chosen
     function flip(key, w, cur) {
         const a = list(key), i = a.indexOf(w);
         if (i >= 0) {
@@ -101,7 +101,7 @@ PanelWindow {
         edit(key, b => b.splice(at, 0, w));
         return at;
     }
-    // клавиши списка в фокусе: ←→ выбрать, shift ←→ переставить, ↵/пробел — сменить вид, del — убрать. -1 — клавиша не наша
+    // list keys in focus: ←→ select, shift ←→ reorder, ↵/space — change view, del — remove. -1 — key not ours
     function nav(e, key, cur, all) {
         const n = list(key).length, d = e.key === Qt.Key_Left ? -1 : e.key === Qt.Key_Right ? 1 : 0;
         if (d && (e.modifiers & Qt.ShiftModifier)) return move(key, cur, cur + d);
@@ -110,8 +110,8 @@ PanelWindow {
         if (e.key === Qt.Key_Delete || e.key === Qt.Key_Backspace) return cut(key, cur);
         return -1;
     }
-    // укладка бенто, как у дома (и как grid-auto-flow в концепте): слева направо, сверху вниз; не влез в ряд — со следующего,
-    // дыра остаётся; рядов три, дальше — мимо
+    // bento layout, like home (and like grid-auto-flow in concept): left to right, top to bottom; didn't fit row — from next,
+    // hole remains; three rows, beyond — miss
     function pack(ids) {
         let row = 0, col = 0;
         return ids.map((w, i) => {
@@ -130,10 +130,10 @@ PanelWindow {
     readonly property string hello: { const h = clock.date.getHours(); return h < 5 ? "Good night" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
     readonly property string who: (Theme.state.name || Quickshell.env("USER")).replace(/&/g, "&amp;").replace(/</g, "&lt;")
 
-    // имя и подпись текущего шелла — из его rice.json (тот же, что рисует приложение Rice)
+    // name and caption of current shell — from its rice.json (same as Rice app draws)
     property var meta: ({})
     FileView { path: Quickshell.shellPath("rice.json"); onLoaded: try { root.meta = JSON.parse(text()); } catch (e) {} }
-    // «switch shell» — только когда есть из чего выбирать: другие шеллы, папки с rice.json рядом (Demon's Shot…)
+    // «switch shell» — only when there's something to choose from: other shells, folders with rice.json nearby (Demon's Shot…)
     property int shells: 1
     Process {
         running: root.visible
@@ -146,16 +146,16 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
     WlrLayershell.layer: WlrLayer.Overlay
-    // экранов несколько — по требованию: клик в окно на другом мониторе забирает клавиатуру, клик сюда — возвращает. Один —
-    // Exclusive: иначе новое окно забрало бы клавиатуру под сплошным фоном, и стрелки и esc ушли бы в невидимое
+    // several screens — on demand: click window on other monitor takes keyboard, click here — returns. One —
+    // Exclusive: otherwise new window would take keyboard under solid background, and arrows and esc would go to invisible
     WlrLayershell.keyboardFocus: shown ? multi ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     WlrLayershell.namespace: "glyph-prefs"
 
     Rectangle {
         anchors.fill: parent
-        color: Theme.bg // сплошной: сквозь 5% просвечивали яркие куски окон позади
+        color: Theme.bg // solid: through 5% bright pieces of windows behind would shine
         opacity: root.t
-        MouseArea { anchors.fill: parent; onClicked: stage.forceActiveFocus() } // мимо — только снять фокус; закрывает esc
+        MouseArea { anchors.fill: parent; onClicked: stage.forceActiveFocus() } // past — only remove focus; esc closes
     }
 
     Stage {
@@ -171,7 +171,7 @@ PanelWindow {
             e.accepted = true;
         }
 
-        // разделы: выбранный крупно с красной точкой (пока печатают имя, красное — каретка, точка белеет)
+        // sections: chosen large with red dot (while typing name, red — caret, dot whitens)
         Column {
             x: 150 - 30 * (1 - root.t)
             anchors.verticalCenter: parent.verticalCenter
@@ -214,9 +214,9 @@ PanelWindow {
             Lb { text: "esc close"; TapHandler { onTapped: root.close() } }
         }
 
-        // ---- HOME: дом в масштабе 168/220 — те же виды, порядок и укладка. Клик — выбрать, ещё клик или ↵ — следующий вид,
-        // тянуть — встать на место того, на кого бросили. Что не влезло в 3 × 3 — справа бледным контуром.
-        // Экранов несколько — сверху какой: у каждого свой набор ----
+        // ---- HOME: home at 168/220 scale — same views, order and packing. Click — choose, another click or ↵ — next view,
+        // drag — take place of who it was thrown on. Didn't fit 3 × 3 — right with faint outline.
+        // Several screens — above which: each has its own set ----
         Page {
             id: home
             k: 0
@@ -233,12 +233,12 @@ PanelWindow {
                 grid.forceActiveFocus();
                 cur = cur === i ? root.cycle("widgets", i, Object.keys(Theme.kinds)) : i;
             }
-            // бросили в точку p сетки: на виджет — его место, в пустую ячейку — за последним до неё; мимо сетки — ничего
+            // threw into point p of grid: on widget — its place, in empty cell — after last before it; past grid — nothing
             function land(i, p) {
                 if (p.x < 0 || p.y < 0 || p.x > grid.width || p.y > grid.height) return;
                 const at = Math.min(2, Math.floor(p.y / 184)) * 3 + Math.min(2, Math.floor(p.x / 184));
                 const hit = placed.find(c => c.row * 3 + c.col <= at && at < c.row * 3 + c.col + c.span);
-                const n = placed.filter(c => c.row * 3 + c.col < at).length; // влезшие — всегда начало списка
+                const n = placed.filter(c => c.row * 3 + c.col < at).length; // fitted — always list start
                 cur = root.move("widgets", i, hit ? hit.i : i < n ? n - 1 : n);
             }
 
@@ -289,7 +289,7 @@ PanelWindow {
                         elide: Text.ElideRight
                         text: !home.cur_ ? "empty · ↵ adds one" : `${home.cur_.id} · ${home.cur_.span} cell${home.cur_.span > 1 ? "s" : ""}${home.cur_.fits ? "" : " · off grid"}`
                     }
-                    // гифка кота (services/Gifs) — пока выбран кот. Клик или ←→ в фокусе
+                    // cat gif (services/Gifs) — while cat chosen. Click or ←→ in focus
                     Column {
                         id: gifPick
                         visible: home.cur_?.id === "cat"
@@ -306,7 +306,7 @@ PanelWindow {
                             width: 404
                             height: 58
                             orientation: ListView.Horizontal
-                            spacing: (width - 6 * 58) / 5 // ровно шесть в ряд
+                            spacing: (width - 6 * 58) / 5 // exactly six in a row
                             clip: true
                             snapMode: ListView.SnapToItem
                             boundsBehavior: Flickable.StopAtBounds
@@ -365,14 +365,14 @@ PanelWindow {
             }
         }
 
-        // ---- DECK: экран, снизу по центру — deck, справа — быстрые настройки; оба вылезают по наведению на свой край.
-        // Секции deck по порядку, как в панели; лоток — какие есть ----
+        // ---- DECK: screen, bottom center — deck, right — quick settings; both pop out by hover on their edge.
+        // Deck sections in order, as in panel; tray — which exist ----
         Page {
             id: deck
             k: 1
             caption: `deck · ${Theme.state.deck.length} of ${Theme.decks.length} sections · bottom edge`
             property int cur: 0
-            // тянут секцию from (-1 — никого): dx — сдвиг курсора в px макета, at — где она в полосе, to — куда встанет
+            // drag section from (-1 — nobody): dx — cursor shift in px layout, at — where it is in strip, to — where it will stand
             property int from: -1
             property real dx: 0
             readonly property real at: Math.max(10, Math.min(10 + (Theme.state.deck.length - 1) * 104, 10 + from * 104 + dx))
@@ -382,7 +382,7 @@ PanelWindow {
                 spacing: 40
 
                 Mini {
-                    // края, что ловят курсор: снизу — deck, справа — быстрые настройки
+                    // edges catching cursor: bottom — deck, right — quick settings
                     Seg {
                         anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 8 }
                         width: 320
@@ -425,7 +425,7 @@ PanelWindow {
                                 required property int index
                                 readonly property bool on: deck.cur === index
                                 readonly property bool hot: on && strip.activeFocus
-                                // пока тянут: эта — за курсором, те, что между ней и местом броска, — на шаг к её месту
+                                // while dragging: this — under cursor, those between it and drop place — one step to its place
                                 readonly property int slot: deck.from < 0 ? index
                                     : index > deck.from && index <= deck.to ? index - 1
                                     : index < deck.from && index >= deck.to ? index + 1 : index
@@ -462,7 +462,7 @@ PanelWindow {
                                     id: dd
                                     target: null
                                     yAxis.enabled: false
-                                    // без target сдвиг — в px сцены, а Stage масштабирован
+                                        // without target shift — in px scene, Stage is scaled
                                     onActiveTranslationChanged: deck.dx = activeTranslation.x / Theme.s
                                     onActiveChanged: {
                                         if (active) {
@@ -470,7 +470,7 @@ PanelWindow {
                                             deck.from = ds.index;
                                             return;
                                         }
-                                        // бросок — после сигнала: смена списка пересоздаёт секции, в том числе эту
+                                        // drop — after signal: list change recreates sections, including this one
                                         const from = deck.from, to = deck.to;
                                         Qt.callLater(() => {
                                             deck.from = -1;
@@ -499,16 +499,16 @@ PanelWindow {
             }
         }
 
-        // ---- BAR: край — два экрана в миниатюре, клик выбирает. Трей — как в баре: слева столбиком (подписи сбоку), сверху
-        // строкой (подписи под иконкой), по порядку; тянуть — вдоль бара. Лоток — что есть ----
+        // ---- BAR: edge — two screens in miniature, click chooses. Tray — as in bar: left column (captions on side), top
+        // row (captions under icon), in order; drag — along bar. Tray — what exists ----
         Page {
             id: bar
             k: 2
             caption: `bar · ${Theme.state.bar.length} of ${Theme.bars.length} in the tray · ${onTop ? "top" : "left"} edge`
             readonly property bool onTop: Theme.state.barAt === "top"
-            readonly property real step: onTop ? 104 : 68 // слот вдоль бара
+            readonly property real step: onTop ? 104 : 68 // slot along bar
             property int cur: 0
-            // тянут from (-1 — никого): d — сдвиг курсора вдоль бара в px макета, at — где он, to — куда встанет
+            // drag from (-1 — nobody): d — cursor shift along bar in px layout, at — where it is, to — where it will stand
             property int from: -1
             property real d: 0
             readonly property real at: Math.max(10, Math.min(10 + (Theme.state.bar.length - 1) * step, 10 + from * step + d))
@@ -549,7 +549,7 @@ PanelWindow {
                             readonly property int slot: bar.from < 0 ? index
                                 : index > bar.from && index <= bar.to ? index - 1
                                 : index < bar.from && index >= bar.to ? index + 1 : index
-                            // место вдоль бара: за курсором, пока тянут
+                            // place along bar: under cursor while dragging
                             property real pos: bd.active ? bar.at : 10 + slot * bar.step
                             Behavior on pos {
                                 enabled: !bd.active
@@ -611,7 +611,7 @@ PanelWindow {
                 Column {
                     spacing: 14
                     Lb { text: "edge" }
-                    // экраны с пилюлей у своего края; ←→ — другой
+                    // screens with pill at own edge; ←→ — other
                     Row {
                         id: edges
                         spacing: 20
@@ -665,12 +665,12 @@ PanelWindow {
             }
         }
 
-        // ---- LOOK: дом в миниатюре следует за тумблерами; имя — в пилюлю ----
+        // ---- LOOK: home miniature follows toggles; name — into pill ----
         Page {
             id: look
             k: 3
             caption: "look · the home screen, live"
-            property bool dim: false // двоеточие погасло
+            property bool dim: false // colon went out
             Timer { running: look.visible && root.visible && Theme.state.blink; interval: 500; repeat: true; onTriggered: look.dim = !look.dim }
 
             Row {
@@ -696,7 +696,7 @@ PanelWindow {
                         lineHeight: 1.1
                         color: Theme.fg
                     }
-                    // Glyph-полосы: справа громкость, снизу прогресс
+                    // Glyph bars: right volume, bottom progress
                     Seg { visible: Theme.state.edges; x: parent.width - 12; y: 140; width: 4; height: 200; n: 12; f: 0.6; vertical: true }
                     Seg { visible: Theme.state.edges; x: 230; y: parent.height - 10; width: 300; height: 4; n: 24; f: 0.4 }
                 }
@@ -720,7 +720,7 @@ PanelWindow {
                 }
             }
 
-            // имя в приветствии; пусто — $USER
+            // name in greeting; empty — $USER
             Rectangle {
                 width: 760
                 height: 72
@@ -755,15 +755,15 @@ PanelWindow {
             }
         }
 
-        // ---- STYLE: откуда цвет и куда он ложится. Сверху — рабочий стол в палитре образца под курсором или в фокусе (нет
-        // такого — в нынешней): бар, быстрые настройки, kitty, плеер, полоса Glyph; справа от него — роли выносками, как на
-        // чертеже: какой цвет где. Под ним откуда цвет и тема; дальше — что у источника: обои точками (клик — пикер), их тона
-        // и варианты (кольцо — сколько цвета) или палитры по группам. Выбор тот же, что style в лаунчере (Theme.styles).
-        // Образцы по индексу: новый Theme.styles на каждый выбор не пересоздаёт кружки, и фокус остаётся где был ----
+        // ---- STYLE: where color from and where it goes. Top — desktop in palette of sample under cursor or in focus (if
+        // none — current): bar, quick settings, kitty, player, Glyph bar; right of it — roles as callouts, as on
+        // blueprint: which color where. Below — where color from and theme; further — what source has: wallpaper dots (click — picker), their tones
+        // and variants (ring — how much color) or palettes by groups. Choice same as style in launcher (Theme.styles).
+        // Samples by index: new Theme.styles for each choice doesn't recreate circles, focus stays where it was ----
         Page {
             id: tint
             k: 4
-            property Item hot: null // образец под курсором или в фокусе
+            property Item hot: null // sample under cursor or in focus
             readonly property var p: hot?.item.pal ?? Theme.pal
             readonly property string src: Theme.state.paint === "scheme" ? (Theme.pal.group === "more" ? "" : Theme.pal.group + " ") + Theme.pal.name
                 : Theme.state.paint === "wall" && Theme.tones.length ? `wallpaper · ${Theme.pal.name}` : "nothing"
@@ -787,8 +787,8 @@ PanelWindow {
                 Pick { label: "theme"; opts: ["dark", "light"]; cur: Theme.light ? 1 : 0; onPicked: i => Theme.setLight(i === 1) }
             }
 
-            // что у источника. Высота одна на все: Page по центру, и макет не прыгал бы при смене источника. ponytail: 300 — на
-            // глаз, палитры в два ряда; вырастет — Item растёт за ним
+            // what source has. Height same for all: Page centered, layout wouldn't jump on source change. ponytail: 300 — by
+            // eye, palettes in two rows; grows — Item grows after it
             Item {
                 width: 1040
                 height: Math.max(300, own.height)
@@ -799,7 +799,7 @@ PanelWindow {
                     Row {
                         visible: Theme.state.paint === "wall"
                         spacing: 34
-                        // обои точками; клик — пикер
+                        // wallpaper dots; click — picker
                         Rectangle {
                             width: 168
                             height: 105
@@ -808,7 +808,7 @@ PanelWindow {
                             border { width: Theme.wall ? 0 : 1; color: Theme.s3 }
                             Image {
                                 anchors.fill: parent
-                                source: visible ? Theme.url(Theme.wallSrc(Theme.wall)) : "" // не видно — без текстуры
+                                source: visible ? Theme.url(Theme.wallSrc(Theme.wall)) : "" // not visible — no texture
                                 fillMode: Image.PreserveAspectCrop
                                 sourceSize: Qt.size(336, 210)
                                 asynchronous: true
@@ -846,7 +846,7 @@ PanelWindow {
                             }
                         }
                     }
-                    // палитры по группам — блоки между source и theme
+                    // palettes by groups — blocks between source and theme
                     Flow {
                         visible: Theme.state.paint === "scheme"
                         width: 1040
@@ -872,7 +872,7 @@ PanelWindow {
             }
         }
 
-        // ---- WINDOWS: рабочий стол с двумя окнами по живым значениям колец. Анимация окон — только если motion ----
+        // ---- WINDOWS: desktop with two windows by live ring values. Window animation — only if motion ----
         Page {
             k: 5
             caption: `windows · hyprland · gaps ${gIn.v} / ${gOut.v} · border ${bord.v} · rounding ${rnd.v} · panels ${pan.v} %`
@@ -888,7 +888,7 @@ PanelWindow {
                             id: wnd
                             required property int index
                             readonly property real o: gOut.v * desk.k
-                            readonly property real l: 78 * Theme.s * desk.k + o // бар 64 + отступ 14, в логических px
+                            readonly property real l: 78 * Theme.s * desk.k + o // bar 64 + margin 14, in logical px
                             readonly property real w: (desk.width - (at === "top" ? o : l) - o - 2 * gIn.v * desk.k) / 2
                             readonly property string at: Theme.state.barAt
                             x: (at !== "top" ? l : o) + (index ? w + 2 * gIn.v * desk.k : 0)
@@ -923,7 +923,7 @@ PanelWindow {
                     }
                 }
 
-                // ponytail: blur и тени в макете не видны (плоский чёрный) — только тумблеры
+                // ponytail: blur and shadows not visible in layout (flat black) — only toggles
                 Column {
                     spacing: 14
                     Toggle { width: 200; text: "blur"; on: root.r.blur; onFlip: { root.r.blur = !root.r.blur; Theme.apply(); } }
@@ -937,13 +937,13 @@ PanelWindow {
                 Dial { id: gIn; label: "gaps in"; to: 30; value: root.r.gapsIn; onMoved: v => { root.r.gapsIn = v; Theme.apply(); } }
                 Dial { id: gOut; label: "gaps out"; to: 60; value: root.r.gapsOut; onMoved: v => { root.r.gapsOut = v; Theme.apply(); } }
                 Dial { id: bord; label: "border"; to: 6; n: 24; value: root.r.border; onMoved: v => { root.r.border = v; Theme.apply(); } }
-                Dial { id: rnd; label: "rounding"; to: 40; value: Theme.state.rounding; onMoved: v => Theme.state.rounding = v } // shell.qml сам зовёт Theme.apply
-                Dial { id: pan; label: "panels"; to: 100; step: 5; value: Theme.state.corners; onMoved: v => Theme.state.corners = v } // углы шелла, %
+                Dial { id: rnd; label: "rounding"; to: 40; value: Theme.state.rounding; onMoved: v => Theme.state.rounding = v } // shell.qml itself calls Theme.apply
+                Dial { id: pan; label: "panels"; to: 100; step: 5; value: Theme.state.corners; onMoved: v => Theme.state.corners = v } // shell corners, %
             }
         }
 
-        // ---- DISPLAY: экраны, как их расставил hypr (клик или ←→ — выбрать); всё ниже — выбранного: яркость (у встроенного),
-        // логические px, масштаб и герцы, бар и дом на нём. Ночник — на все ----
+        // ---- DISPLAY: screens as hypr arranged them (click or ←→ — choose); everything below — chosen: brightness (built-in),
+        // logical px, scale and hz, bar and home on it. Night light — for all ----
         Page {
             id: disp
             k: 6
@@ -954,12 +954,12 @@ PanelWindow {
             Row {
                 spacing: 60
                 Column {
-                    z: 1 // тянут экран за край схемы — поверх кольца яркости
+                    z: 1 // drag screen by edge of scheme — above brightness ring
                     spacing: 22
                     Item {
                         id: map
                         readonly property var ms: Rules.mons
-                        // тянут экран held: at — куда он встанет (логические px); держим там, пока hypr не ответит новыми мониторами
+                        // drag screen held: at — where it will stand (logical px); hold there until hypr answers with new monitors
                         property string held: ""
                         property var at: null
                         onMsChanged: held = ""
@@ -1011,9 +1011,9 @@ PanelWindow {
                                     }
                                 }
                                 HoverHandler { cursorShape: root.multi ? Qt.OpenHandCursor : Qt.PointingHandCursor }
-                                // тянуть — к соседу встаёт вплотную (Rules.dock); бросили — Rules.place. Пока hypr не ответил на
-                                // прошлый бросок, не тянется: расчёт шёл бы от старых мест. Без target сдвиг — в px сцены, а Stage
-                                // масштабирован
+                                // drag — to neighbor stands flush (Rules.dock); dropped — Rules.place. While hypr hasn't answered
+                                // previous drop, doesn't drag: calculation would go from old places. Without target shift — in px scene, Stage
+                                // is scaled
                                 DragHandler {
                                     target: null
                                     enabled: root.multi && (!map.held || active)
@@ -1047,29 +1047,29 @@ PanelWindow {
                     }
                     Lb { text: "logical pixels" }
                 }
-                // подсветка — у встроенного; внешние по DDC — нет (services/Backlight)
+                // backlight — built-in; external by DDC — no (services/Backlight)
                 Column {
                     visible: Sys.hasBri && disp.m.name === Rules.mon.name
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 22
                     Dial { anchors.horizontalCenter: parent.horizontalCenter; size: 300; n: 60; live: true; label: "brightness"; value: Math.round(Sys.bri * 100); onMoved: v => Sys.setBri(v / 100) }
-                    // шаг клавиш яркости: делений на шкалу (Backlight.steps)
+                    // brightness key step: divisions on scale (Backlight.steps)
                     Pick { anchors.horizontalCenter: parent.horizontalCenter; label: "step"; opts: ["2.5%", "5%", "10%"]; cur: [40, 20, 10].indexOf(Theme.state.briSteps); onPicked: i => Theme.state.briSteps = [40, 20, 10][i] }
                 }
             }
             Row {
                 spacing: 24
                 Pick { label: "scale"; opts: Rules.scales; cur: disp.w.scale ? Rules.scales.indexOf(String(disp.w.scale)) : 0; onPicked: i => Rules.set(disp.m.name, "scale", i ? +Rules.scales[i] : 0) }
-                // частот бывает и пять, и восемь (телевизор, 165 Гц) — уже сегменты, чтобы строка не ушла за край холста
+                // frequency can be five or eight (TV, 165 Hz) — already segments, so line wouldn't go past canvas edge
                 Pick { label: "hz"; seg: Math.min(104, 416 / opts.length); opts: disp.m.rates.map(String); cur: disp.m.rates.indexOf(disp.w.refresh); onPicked: i => Rules.set(disp.m.name, "refresh", disp.m.rates[i]) }
             }
-            // и на одном экране: бар сняли с ноутбука в доке, отстыковали — вернуть его можно только здесь
+                // and on one screen: bar removed from laptop in dock, undocked — can return it only here
             Row {
                 spacing: 20
                 Toggle { text: "bar"; on: Theme.scr(root.mon, "bar"); onFlip: Theme.setScr(root.mon, "bar", !on) }
                 Toggle { text: "home"; on: Theme.scr(root.mon, "home"); onFlip: Theme.setScr(root.mon, "home", !on) }
                 Lb { anchors.verticalCenter: parent.verticalCenter; leftPadding: 10; text: "on this screen · its widgets — in home" }
-                // свои места, масштаб и герцы внешних — забыть, снова как в конфиге hypr (Rules.forget)
+                // own places, scale and hz of external — forget, again as in hypr config (Rules.forget)
                 Act { visible: Object.keys(Rules.store.outs).length > 0; icon: "\u{F0450}"; text: "hypr config"; onHit: Rules.forget() }
             }
             Row {
@@ -1087,8 +1087,8 @@ PanelWindow {
             Audio { id: aud; live: audioPage.visible && root.shown }
         }
 
-        // ---- POWER: режимы питания (Rules.modes) — четыре круга, кольцо горит по силе, выбранный белый.
-        // ultra — power saver и ещё 60 Гц, без анимаций, blur и теней поверх настроек ----
+        // ---- POWER: power modes (Rules.modes) — four circles, ring glows by strength, chosen white.
+        // ultra — power saver plus 60 Hz, no animations, blur and shadows over settings ----
         Page {
             k: 8
             caption: `power · ${Rules.modes[Rules.mode].what} · ${Rules.hz} hz`
@@ -1130,12 +1130,12 @@ PanelWindow {
             Lb { visible: !PowerProfiles.hasPerformanceProfile; text: "no performance profile on this machine" }
         }
 
-        // ---- INPUT: держишь клавишу — первая точка сразу, пауза delay, дальше rate в секунду; по живым кольцам ----
+        // ---- INPUT: hold key — first dot immediately, pause delay, then rate per second; by live rings ----
         Page {
             id: inp
             k: 9
             caption: "input · keyboard · touchpad"
-            property int n: 0 // сколько «напечатано»; 0 — клавиша отпущена
+            property int n: 0 // how many "typed"; 0 — key released
             Timer {
                 running: inp.visible && root.visible
                 repeat: true
@@ -1189,8 +1189,8 @@ PanelWindow {
             Pick { label: "layout switch"; opts: Rules.switches.map(s => s[0]); cur: root.r.kbSwitch; onPicked: i => { root.r.kbSwitch = i; Rules.input(); } }
         }
 
-        // ---- IDLE: шкала минут без ввода. Точки тускнеют на каждом событии: бодр → заперт → экран погас → спит.
-        // Метки тянутся вдоль, правее 60 — never ----
+        // ---- IDLE: minute scale without input. Dots dim on each event: awake → locked → screen off → asleep.
+        // Labels drag along, right of 60 — never ----
         Page {
             k: 10
             caption: "idle · minutes without input · hypridle"
@@ -1214,7 +1214,7 @@ PanelWindow {
                         color: [Theme.fg, Theme.grey, Theme.mute, Theme.s3][lvl]
                     }
                 }
-                // never — пустое кольцо за шкалой
+                // never — empty ring past scale
                 Rectangle { x: 62 * 15 - 7; y: 243; width: 14; height: 14; radius: 7; color: "transparent"; border { width: 1; color: Theme.mute } }
                 Repeater {
                     model: [0, 15, 30, 45, 60]
@@ -1245,7 +1245,7 @@ PanelWindow {
             }
         }
 
-        // ---- SHELL: знак райса и имя живого шелла; переключатель — приложение Rice ----
+        // ---- SHELL: rice sign and name of live shell; switcher — Rice app ----
         Page {
             k: 11
             caption: "shell · quickshell"
@@ -1283,7 +1283,7 @@ PanelWindow {
         }
     }
 
-    // раздел справа: виден только выбранный (Tab ходит лишь по видимым), появляется снизу вверх
+    // section right: only chosen visible (Tab walks only visible), appears bottom-up
     component Page: Column {
         required property int k
         property string caption
@@ -1298,7 +1298,7 @@ PanelWindow {
         Lb { text: parent.caption }
     }
 
-    // экран в миниатюре 16:10: обои (сетка точек, если включена) и бар; k — логический px экрана в px макета
+    // screen miniature 16:10: wallpaper (dot grid if on) and bar; k — logical px of screen to px layout
     component Mini: Rectangle {
         readonly property real k: width / (Rules.mon.w ? Rules.mon.w / Rules.scale : Quickshell.screens[0]?.width ?? 1920)
         width: 760
@@ -1312,7 +1312,7 @@ PanelWindow {
             fillMode: Image.Tile
             source: "data:image/svg+xml," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><circle cx="8" cy="8" r="1" fill="#${Theme.hex(Theme.s2)}"/></svg>`)
         }
-        // бар у своего края: отступ 14 и толщина 64 — px макета, на экране они Theme.s логических
+        // bar at own edge: offset 14 and thickness 64 — px layout, on screen they are Theme.s logical
         Rectangle {
             readonly property real u: Theme.s * parent.k
             readonly property bool onTop: Theme.state.barAt === "top"
@@ -1326,7 +1326,7 @@ PanelWindow {
         }
     }
 
-    // пустая ячейка макета: 4 × 4 погасших точки
+    // empty layout cell: 4 × 4 dimmed dots
     component Dots: Grid {
         columns: 4
         padding: 30
@@ -1337,8 +1337,8 @@ PanelWindow {
         }
     }
 
-    // виджет в макете дома: круг или квадрат 40 (в масштабе), иконка точками, имя. Выбранный — белая обводка,
-    // в фокусе — белый целиком. Не влез — бледный контур
+    // widget in home layout: circle or square 40 (scaled), icon as dots, name. Chosen — white outline,
+    // in focus — white entirely. Didn't fit — faint outline
     component Tile: Rectangle {
         id: tile
         required property var modelData // { id, i, row, col, span, fits }
@@ -1353,7 +1353,7 @@ PanelWindow {
         color: hot ? Theme.fg : modelData.fits ? Theme.s1 : "transparent"
         border { width: on ? 2 : 1; color: on ? Theme.fg : modelData.fits ? Theme.s2 : Theme.mute }
         z: drag.active ? 1 : 0
-        // без target сдвиг — в px сцены, а Stage масштабирован
+        // without target shift — in px scene, Stage is scaled
         readonly property real dx: drag.activeTranslation.x / Theme.s
         readonly property real dy: drag.activeTranslation.y / Theme.s
         transform: Translate { x: drag.active ? tile.dx : 0; y: drag.active ? tile.dy : 0 }
@@ -1382,7 +1382,7 @@ PanelWindow {
             Lb { visible: tile.cell > 100; anchors.horizontalCenter: parent.horizontalCenter; text: tile.modelData.id; px: 10; color: tile.hot ? Theme.ink : Theme.grey }
         }
         TapHandler { onTapped: home.tap(tile.modelData.i) }
-        // бросок — после сигнала: смена списка пересоздаёт плитки, в том числе эту
+        // drop — after signal: list change recreates tiles, including this one
         DragHandler {
             id: drag
             target: null
@@ -1397,8 +1397,8 @@ PanelWindow {
         }
     }
 
-    // метка простоя: ножка до шкалы, число Doto и имя. Тянуть вдоль шкалы, ←→ — по минуте; правее 60 — never (0).
-    // Пока тянут — своё v, в rules.json и hypridle — на отпускании или через 400 мс тишины
+    // idle mark: leg to scale, Doto number and name. Drag along scale, ←→ — by minute; right of 60 — never (0).
+    // While dragging — its own v, in rules.json and hypridle — on release or after 400 ms silence
     component Mark: Item {
         id: mk
         property int row
@@ -1449,7 +1449,7 @@ PanelWindow {
         }
     }
 
-    // кнопка: пилюля с иконкой в круге. Клик, ↵, пробел
+    // button: pill with icon in circle. Click, Enter, Space
     component Act: Rectangle {
         id: act
         property string icon

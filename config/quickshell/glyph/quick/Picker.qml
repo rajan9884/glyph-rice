@@ -4,35 +4,35 @@ import Quickshell.Networking
 import qs
 import qs.components
 
-// список под пилюлями (правый клик по Wi-Fi/Bluetooth). Сети: клик подключает и отключает, новая защищённая — строка пароля.
-// Устройства: связанные клик соединяет и разрывает, чужие — знакомит (pair). Ищет, только пока список открыт
+// list under pills (right click on Wi-Fi/Bluetooth). Networks: click connects and disconnects, new protected — password line.
+// Devices: paired click connects/disconnects, foreign — pairs. Searches only while list open
 Rectangle {
     id: root
-    property string kind // "wifi" | "bt" | "" — закрыт
-    signal touched       // любой клик внутри — панель приколота
+    property string kind // "wifi" | "bt" | "" — closed
+    signal touched       // any click inside — panel pinned
     signal portalRequested
 
     readonly property bool open: kind === "wifi" || kind === "bt"
-    // что показано: закрыли — остаётся, пока список сжимается (Quick), иначе он пустел бы сразу
+    // what's shown: closed — remains while list compresses (Quick), otherwise it'd empty right away
     property string shown
     onVisibleChanged: if (!visible) shown = ""
     readonly property bool isWifi: shown === "wifi"
     readonly property var wifi: Networking.devices.values.find(d => d.type === DeviceType.Wifi) ?? null
     readonly property var bt: Bluetooth.defaultAdapter
     readonly property bool on: isWifi ? Networking.wifiEnabled : bt?.enabled ?? false
-    // сеть со страницей входа: сам портал (и снятие vpn) открывает Vpn, здесь — открыть его снова, если вкладку закрыли
+    // network with captive portal: portal itself (and vpn removal) opens Vpn, here — reopen it if tab closed
     readonly property bool portal: Networking.connectivity === NetworkConnectivity.Portal
 
-    property var ask: null // сеть, которой нужен пароль
-    // доверие — когда знакомство состоялось, не до: доверенному BlueZ пускает входящие подключения без спроса, и отменённое
-    // знакомство с чужим «наушником» оставляло бы его доверенным. Доверенный сам переподключается (наушники из кейса)
+    property var ask: null // network that needs a password
+    // trust — when pairing done, not before: trusted BlueZ lets incoming connections without ask, and cancelled
+    // pairing with foreign "headphone" would leave it trusted. Trusted reconnects itself (headphones from case)
     property var pend: null
     Connections {
         target: root.pend
         function onPairedChanged() { if (root.pend.paired) { root.pend.trusted = true; root.pend = null; } }
     }
     property string err
-    // kind, не open: привязка open к этому сигналу может быть ещё не пересчитана, и первое открытие показывало bluetooth
+    // kind, not open: binding open to this signal may not be recalculated yet, and first opening showed bluetooth
     onKindChanged: { if (kind === "wifi" || kind === "bt") shown = kind; ask = null; err = ""; fl.contentY = 0; }
     onAskChanged: {
         pw.clear();
@@ -49,10 +49,10 @@ Rectangle {
     Binding { when: root.kind === "wifi" && root.on; target: root.wifi; property: "scannerEnabled"; value: true }
     Binding { when: root.kind === "bt" && root.on; target: root.bt; property: "discovering"; value: true }
 
-    // своя сверху, дальше сохранённые, дальше по силе. Пока вводят пароль — только та сеть: пересортировка не съест набранное
+    // own at top, then saved, then by strength. While entering password — only that network: resort won't eat typed
     readonly property var nets: !isWifi || !wifi ? [] : wifi.networks.values.filter(n => n.name)
         .sort((a, b) => b.connected - a.connected || b.known - a.known || b.signalStrength - a.signalStrength).slice(0, 6)
-    // безымянные (только адрес) — шум эфира
+    // unnamed (only address) — air noise
     readonly property var devs: shown !== "bt" || !bt ? [] : bt.devices.values.filter(d => d.paired || d.deviceName)
         .sort((a, b) => b.connected - a.connected || b.paired - a.paired).slice(0, 6)
     readonly property var rows: !on ? [] : ask ? [ask] : isWifi ? nets : devs
@@ -65,7 +65,7 @@ Rectangle {
     function btIcon(i) {
         return /audio|head/.test(i) ? "\u{F02CB}" : /mouse/.test(i) ? "\u{F037D}" : /keyboard/.test(i) ? "\u{F030C}" : /phone/.test(i) ? "\u{F03F2}" : "\u{F00AF}";
     }
-    // ponytail: enterprise (EAP) сюда не пролезет — только psk; понадобится — nmcli в demonshot Settings
+    // ponytail: enterprise (EAP) won't fit here — only psk; if needed — nmcli in demonshot Settings
     function tap(o) {
         touched();
         err = "";
@@ -82,7 +82,7 @@ Rectangle {
         ask = o;
     }
 
-    // потолок задаёт Quick: выше — список листается, а не выталкивает панель за экран
+    // ceiling set by Quick: above — list scrolls, not pushes panel off screen
     property real max: Infinity
     height: Math.max(0, Math.min(list.height + 32, max))
     radius: Theme.corner(30)
@@ -151,7 +151,7 @@ Rectangle {
                             text: root.isWifi ? root.bars(row.o) : root.btIcon(row.o.icon)
                             font.pixelSize: 19
                             color: row.on ? Theme.ink : Theme.fg
-                            // идёт соединение — иконка дышит
+                            // connection in progress — icon breathes
                             SequentialAnimation on opacity {
                                 running: row.busy
                                 loops: Animation.Infinite
@@ -174,9 +174,9 @@ Rectangle {
                     }
                     HoverHandler { id: hov; cursorShape: Qt.PointingHandCursor }
                     TapHandler { onTapped: root.tap(row.o) }
-                    // правый клик по сохранённой — забыть
+                    // right click on saved — forget
                     TapHandler { acceptedButtons: Qt.RightButton; onTapped: { root.touched(); if (row.o.known || row.o.paired) row.o.forget(); } }
-                    // нет пароля или он не тот — NM просит секрет: снова строка пароля
+                    // no password or wrong one — NM asks secret: password line again
                     Connections {
                         target: root.isWifi ? row.o : null
                         ignoreUnknownSignals: true

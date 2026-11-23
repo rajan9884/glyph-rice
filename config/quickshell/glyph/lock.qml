@@ -6,19 +6,19 @@ import Quickshell.Services.Pam
 import Quickshell.Wayland
 import "lock"
 
-// блокировка — отдельный процесс, как в demonshot: qs -p …/glyph/lock.qml (его зовёт `rice lock`). Разблокировались — выходим.
-// Упал шелл — лок живёт; упал лок — Hyprland держит экран закрытым, SUPER+ALT+L поднимает его заново
+// lock — separate process, like in demonshot: qs -p …/glyph/lock.qml (called by `rice lock`). Unlocked — exit.
+// Shell crashed — lock lives; lock crashed — Hyprland keeps screen closed, SUPER+ALT+L raises it again
 ShellRoot {
     id: shell
-    // hot-reload пересоздаёт WlSessionLock: старый умирает, процесс висит без экрана
+    // hot-reload recreates WlSessionLock: old dies, process hangs without screen
     settings.watchFiles: false
 
     QtObject {
         id: gate
         property string buffer: ""
         property bool fail: false
-        property bool leaving: false // пароль принят: поверхность доигрывает уход, потом unlockT снимает лок
-        property string note: ""     // что PAM сказал, кроме вопроса: faillock — «account is locked… minutes left», иначе пусто
+        property bool leaving: false // password accepted: surface plays exit, then unlockT removes lock
+        property string note: ""     // what PAM said besides question: faillock — "account is locked… minutes left", else empty
         readonly property bool busy: pam.active
         function submit() {
             if (!buffer || pam.active || leaving) return;
@@ -58,7 +58,7 @@ ShellRoot {
     WlSessionLock {
         id: lock
         locked: true
-        // ponytail: lockedChanged после locked = false не приходит (quickshell 0.3.2), а secure падает — выходим по нему
+        // ponytail: lockedChanged after locked = false doesn't come (quickshell 0.3.2), and secure drops — exit on it
         onSecureChanged: if (!secure) Qt.quit()
 
         LockSurface { auth: gate; layout: shell.layout }

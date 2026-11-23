@@ -5,9 +5,9 @@ import Quickshell.Wayland
 import qs
 import qs.components
 
-// подключились наушники Nothing / CMF (Sys.buds) — карточка снизу, как у AirPods: выезжает с пружиной, устройство светится
-// силуэтом из точек Glyph и проявляется в фото, кольца заряда загораются волной. Клик — убрать, сама уходит через 6 с,
-// наведение держит. Фото — локальный buds/<имя-устройства>.png, нет файла — иконка
+// Nothing / CMF headphones connected (Sys.buds) — card at bottom, like AirPods: slides in with spring, device glows
+// as dot silhouette of Glyph and reveals into photo, charge rings light up in wave. Click — dismiss, auto hides in 6 s,
+// hover holds. Photo — local buds/<device-name>.png, no file — icon
 PanelWindow {
     id: root
 
@@ -18,14 +18,14 @@ PanelWindow {
     readonly property string artSlug: (useHardwareArt ? "" : slug(name)) || slug(hardwareName)
     readonly property string art: artSlug && (shown || t > 0) ? Quickshell.shellPath("buds/" + artSlug + ".png") : ""
 
-    // ход показа: t — карточка, lit — силуэт из точек, pop — устройство встаёт на место, res — точки → фото
+    // show progress: t — card, lit — dot silhouette, pop — device settles into place, res — dots → photo
     property real t: 0
     property real lit: 0
     property real pop: 0
     property real res: 0
     property bool shown: false
 
-    // на старте шелла наушники уже подключены — не показывать
+    // headphones already connected at shell start — don't show
     property bool armed: false
     Timer { running: true; interval: 3000; onTriggered: root.armed = true }
     Connections {
@@ -68,7 +68,7 @@ PanelWindow {
     NumberAnimation { id: outA; target: root; property: "t"; to: 0; duration: 380; easing.type: Easing.InCubic }
     Timer { interval: 6000; running: root.shown && !hov.hovered; onTriggered: root.hide() }
 
-    // лёгкое покачивание, пока видно
+    // light bob while visible
     property real bob: 0
     SequentialAnimation on bob {
         running: root.visible
@@ -91,7 +91,7 @@ PanelWindow {
         Rectangle {
             id: card
             x: 20
-            // окно с запасом сверху (40) под перелёт пружины; t = 0 — карточка целиком под краем экрана
+            // window with top slack (40) for spring overshoot; t = 0 — card fully below screen edge
             y: 40 + (1 - root.t) * 480
             width: 420
             height: 456
@@ -130,7 +130,7 @@ PanelWindow {
                     scale: 0.7 + 0.3 * root.pop
                     rotation: -10 * (1 - root.pop)
 
-                    // силуэт: белые точки-светодиоды (в светлой теме чёрные), уходят, пока проявляется фото
+                    // silhouette: white LED dots (black in light theme), fade while photo reveals
                     Item {
                         anchors.fill: parent
                         visible: photo.status === Image.Ready && opacity > 0
@@ -167,7 +167,7 @@ PanelWindow {
                 }
             }
 
-            // заряд: левый, правый, кейс (кейс — только когда наушники в нём), у полноразмерных одно bat. Пока ear не ответил — пусто
+            // charge: left, right, case (case — only when headphones in case), full-size — one bat. Empty until ear responds
             Row {
                 anchors.horizontalCenter: parent.horizontalCenter
                 y: 330
@@ -178,7 +178,7 @@ PanelWindow {
                         id: bat
                         required property string modelData
                         readonly property real v: Sys.ear?.[modelData] ?? 0
-                        // своя волна у каждого кольца: от нуля до заряда, цифры считают следом
+                        // own wave per ring: from zero to charge, numbers follow
                         property real k: 0
                         NumberAnimation on k { from: 0; to: 1; duration: 900; easing.type: Easing.OutCubic }
                         spacing: 8

@@ -11,9 +11,9 @@ state=${XDG_STATE_HOME:-$HOME/.local/state}/rice
 cur=$(cat "$state/shell" 2>/dev/null)
 [ -f "$q/$cur/rice.json" ] || cur=glyph
 
-# терминал и приложения в духе шелла: ~/.config/<f> ссылается на term/<f> шелла. starship и fastfetch читают конфиг на каждый
-# запуск, открытые cava (USR1) и btop (USR2) перечитывают по сигналу, gtk — при смене темы (дёргаем туда-обратно),
-# qt (qtengine.colors из ~/.config/qtengine/config.json) — при следующем запуске. Настоящий файл (не ссылку) не трогаем
+# terminal and apps in shell spirit: ~/.config/<f> links to term/<f> of the shell. starship and fastfetch read config on each
+# launch, open cava (USR1) and btop (USR2) re-read by signal, gtk — on theme change (toggle back and forth),
+# qt (qtengine.colors from ~/.config/qtengine/config.json) — on next launch. Real file (not link) we don't touch
 term() {
     for f in starship.toml fastfetch cava btop gtk-3.0/gtk.css gtk-4.0/gtk.css qtengine.colors; do
         [ -e "$q/$1/term/$f" ] || continue
@@ -28,8 +28,8 @@ term() {
     gsettings set $g icon-theme Papirus-Dark; gsettings set $g icon-theme Rice
 }
 
-# папки в цвет шелла (term/folders: grey, carmine… — цвета Papirus): тема значков Rice поверх Papirus-Dark, где folder-*/user-*
-# ссылаются на нужный цвет — то же, что делает papirus-folders, только у себя в ~/.local/share и без sudo. Её же берёт qtengine
+# folders in shell color (term/folders: grey, carmine… — Papirus colors): Rice icon theme over Papirus-Dark, where folder-*/user-*
+# link to the right color — same as papirus-folders does, but in own ~/.local/share and without sudo. qtengine takes it too
 folders() {
     c=$(cat "$q/$1/term/folders" 2>/dev/null) || return 0
     d=${XDG_DATA_HOME:-$HOME/.local/share}/icons/Rice
@@ -56,8 +56,8 @@ Type=Fixed
     echo "$c" > "$d/color"
 }
 
-# погасить все экземпляры шелла и дождаться: qs kill гасит один, а лишние копии рисуют всё дважды и держат dbus-имена
-# (уведомления, трей) — новый шелл их не получит
+# kill all shell instances and wait: qs kill kills one, extra copies draw everything twice and hold dbus names
+# (notifications, tray) — new shell won't get them
 pids() { qs list --all 2>/dev/null | awk -v p="$q/$1/shell.qml" '$1 == "Process" { pid = $3 } $1 == "Config" && $3 == p { print pid }'; }
 stop() {
     pids=$(pids "$1")
@@ -76,14 +76,14 @@ case $1 in
     "") echo "$cur" ;;
     list) for f in "$q"/*/rice.json; do basename "$(dirname "$f")"; done ;;
     start) [ -n "$(pids "$cur")" ] && exit 0; mkdir -p "$state"; term "$cur"; exec qs -p "$q/$cur" -d ;;
-    restart) term "$cur"; stop "$cur"; hyprctl reload >/dev/null; exec qs -p "$q/$cur" -d ;; # reload снимает и залипшую плашку ошибок hypr
+    restart) term "$cur"; stop "$cur"; hyprctl reload >/dev/null; exec qs -p "$q/$cur" -d ;; # reload removes stuck hypr error badge
     kill) stop "$cur" ;;
     switch)
         [ -f "$q/$2/rice.json" ] || { echo "rice: no shell \"$2\"" >&2; exit 1; }
         mkdir -p "$state"
         echo "$2" > "$state/shell"
         stop "$cur"
-        hyprctl reload >/dev/null # снять вид прошлого шелла: новый накладывает свой поверх конфига hypr
+        hyprctl reload >/dev/null # remove previous shell's look: new one overlays its own on hypr config
         term "$2"
         exec qs -p "$q/$2" -d ;;
     lock) pgrep -f '^qs .*/lock[.]qml' >/dev/null || exec qs -p "$q/$cur/lock.qml" ;;

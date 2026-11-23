@@ -11,16 +11,16 @@ import Quickshell.Wayland
 import qs.services
 import qs.settings
 
-// то, что трогают бар, быстрые настройки, Glyph и лок: звук, яркость, раскладка, запись, ночник, авиарежим, кофеин, vpn
+// what bar, quick settings, Glyph and lock touch: sound, brightness, layout, recording, night light, airplane mode, caffeine, vpn
 Singleton {
     id: root
 
-    // deck (панель снизу) открыта — SysStats нужен подробный опрос, как на пустом воркспейсе (Home)
+    // deck (bottom panel) open — SysStats needs detailed polling, like on empty workspace (Home)
     property bool deckOpen: false
-    // пикер обоев открыт — дом меняет обои сразу, без волны: её уже показал пикер
+    // wallpaper picker open — home changes wallpaper immediately, no wave: picker already showed it
     property bool wallOpen: false
 
-    // ---- звук ----
+    // ---- sound ----
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property var mic: Pipewire.defaultAudioSource
     PwObjectTracker { objects: [root.sink, root.mic] }
@@ -32,17 +32,17 @@ Singleton {
         sink.audio.muted = false;
         sink.audio.volume = Math.max(0, Math.min(1, v));
     }
-    // микрофон кто-то слушает — центр знака в баре краснеет
+    // someone listening to mic — center of icon in bar turns red
     PwNodeLinkTracker { id: micUse; node: root.mic }
     readonly property bool live: rec || micUse.linkGroups.length > 0
 
-    // ---- яркость: общий с demonshot Backlight (устройство ищет brightnessctl) ----
+    // ---- brightness: shared with demonshot Backlight (device searches for brightnessctl) ----
     readonly property real bri: Backlight.value
-    readonly property bool hasBri: !!Backlight.dev // нет подсветки (ПК с монитором) — регуляторов яркости нет
+    readonly property bool hasBri: !!Backlight.dev // no backlight (PC with monitor) — no brightness controls
     function setBri(v) { Backlight.set(v); }
     Binding { target: Backlight; property: "steps"; value: Theme.state.briSteps }
 
-    // ---- раскладка: старт — main-клавиатура из hyprctl, дальше событие activelayout ----
+    // ---- layout: start — main keyboard from hyprctl, then activelayout event ----
     property string kbd: ""
     Process {
         running: true
@@ -55,8 +55,8 @@ Singleton {
     }
     readonly property string layout: kbd.slice(0, 2).toLowerCase() // "English (US)" → en
 
-    // ---- запись и авиарежим: их же включают бинды hypr, поэтому опрос. Ночник — общий с demonshot, в его rules.json
-    // ponytail: pgrep раз в 3 с; станет заметно — следить за процессами через systemd-run --scope ----
+// ---- recording and airplane mode: same ones turned on by hypr binds, so polling. Night light — shared with demonshot, in its rules.json
+// ponytail: pgrep every 3s; will become noticeable — watch processes via systemd-run --scope ----
     property bool rec: false
     readonly property bool night: Rules.store.night
     property bool air: false
@@ -74,14 +74,14 @@ Singleton {
     Timer { running: true; repeat: true; interval: 3000; triggeredOnStart: true; onTriggered: poll.running = true }
 
     function sh(c) { Quickshell.execDetached(["sh", "-c", c]); }
-    // настройки записи из Theme.state (quick/Rec) → флаги gpu-screen-recorder; их же берёт скриншотилка
+    // recording settings from Theme.state (quick/Rec) → gpu-screen-recorder flags; screenshot tool takes them too
     readonly property var recFps: [30, 60, 120]
     function recArgs() {
         const st = Theme.state;
         const a = ["", "default_output", "default_input", "default_output|default_input"][st.recAudio];
         return `-f ${st.recFps} -q ${["medium", "high", "very_high", "ultra"][st.recQuality]} -cursor ${st.recCursor ? "yes" : "no"}` + (a ? ` -a "${a}"` : "");
     }
-    // второй раз — стоп. Область — slurp; отменили выбор — gsr не стартует, rec поправит опрос
+    // second time — stop. Area — slurp; cancelled selection — gsr won't start, rec will fix polling
     function toggleRec() {
         const w = Theme.state.recArea ? `-w region -region "$(slurp -f %wx%h+%x+%y)"` : `-w ${Hyprland.focusedMonitor?.name ?? "screen"}`;
         sh(`pkill -INT -f '^gpu-screen-recorder' || exec gpu-screen-recorder ${w} ${recArgs()} -o "$(xdg-user-dir VIDEOS)/rec-$(date +%F_%H-%M-%S).mp4"`);
@@ -91,16 +91,16 @@ Singleton {
     function toggleAir() { Quickshell.execDetached(["rfkill", air ? "unblock" : "block", "all"]); air = !air; }
     function toggleMic() { if (mic?.audio) mic.audio.muted = !mic.audio.muted; }
 
-    // ---- наушники Nothing / CMF: шумодав и заряд через ./ear (их RFCOMM-протокол). Спрашиваем при открытии быстрых настроек.
-    // ponytail: узнаём по имени, как Gadgetbridge; не Nothing — ear не ответит, ear останется null ----
+// ---- Nothing / CMF headphones: noise cancelling and charge via ./ear (their RFCOMM protocol). Ask when opening quick settings.
+// ponytail: recognize by name, like Gadgetbridge; not Nothing — ear won't respond, ear stays null ----
     readonly property var buds: Bluetooth.devices.values.find(d => d.connected && /^(nothing|cmf|ear)\b|^(buds|neckband) pro$/i.test(d.deviceName || d.name)) ?? null
-    property var ear: null // {mode?, l, r, case?} или {mode?, bat} у полноразмерных и шейных
+    property var ear: null // {mode?, l, r, case?} or {mode?, bat} for full-size and neckband
     readonly property var earBat: ["bat", "l", "r", "case"].filter(k => ear?.[k] !== undefined)
     onBudsChanged: { ear = null; earNext = null; }
-    // сразу после подключения канал ещё не готов — спрашивать раз в 2 с, пока не ответят. ponytail: не Nothing с похожим
-    // именем так и будет опрашиваться, пока подключено
+// right after connection channel not ready yet — ask every 2s until they answer. ponytail: not Nothing with similar name
+// will be polled like that while connected
     Timer { interval: 2000; repeat: true; running: !!root.buds && !root.ear; onTriggered: root.earRun([]) }
-    // режимы по модели — как в BudsLink (deviceConfigs). Кого нет в списке — полный набор: у остальных Ear, CMF, Headphone он такой
+    // modes by model — like BudsLink (deviceConfigs). Missing from list — full set: for others Ear, CMF, Headphone it's like this
     readonly property var ancModes: {
         const n = buds?.deviceName || buds?.name || "";
         if (/ear \(open\)$/i.test(n)) return [];
@@ -133,10 +133,10 @@ Singleton {
         }
     }
 
-    // ---- Bluetooth сам не переподключает устройства, когда адаптер включили обратно (пилюля, авиарежим, rfkill).
-    // BlueZ сначала рвёт соединения и только потом гасит адаптер (Connected:false за 40–90 мс до Powered:false), так что
-    // снимок в момент выключения пуст. Поэтому список подключённых пишем с задержкой: выключение её отменяет, и в
-    // btResume остаётся то, что было до. Отключил сам или наушники убрали в кейс — через полсекунды список это примет ----
+// ---- Bluetooth doesn't reconnect devices itself when adapter turned back on (pill, airplane mode, rfkill).
+// BlueZ first breaks connections and only then turns off adapter (Connected:false 40–90ms before Powered:false), so
+// snapshot at shutdown time is empty. That's why we write connected list with delay: shutdown cancels it, and in
+// btResume stays what was before. Disconnected yourself or headphones put in case — in half a second list will accept it ----
     readonly property var btOn: Bluetooth.devices.values.filter(d => d.connected).map(d => d.address)
     property var btResume: []
     onBtOnChanged: btKeep.restart()
@@ -145,10 +145,10 @@ Singleton {
         target: Bluetooth.defaultAdapter
         function onEnabledChanged() { if (Bluetooth.defaultAdapter.enabled) btResumeT.restart(); else { btKeep.stop(); btResumeT.stop(); } }
     }
-    // адаптеру нужно время после включения
+    // adapter needs time after turning on
     Timer { id: btResumeT; interval: 1500; onTriggered: { for (const d of Bluetooth.devices.values) if (root.btResume.includes(d.address) && !d.connected) d.connect(); } }
 
-    // ---- кофеин: не спать. Ингибитору нужно живое окно — невидимое 0×0, как в demonshot ----
+    // ---- caffeine: don't sleep. Inhibitor needs live window — invisible 0×0, like in demonshot ----
     property bool caffeine: false
     IdleInhibitor {
         enabled: root.caffeine
@@ -162,8 +162,8 @@ Singleton {
         }
     }
 
-    // ---- vpn: clash verge через пункты его трея, как договор в demonshot.
-    // ponytail: подписи английские (language: en в verge); другой язык — поменять строки ----
+// ---- vpn: clash verge via its tray items, like agreement in demonshot.
+// ponytail: captions English (language: en in verge); other language — change strings ----
     readonly property var verge: SystemTray.items.values.find(i => i.title === "clash-verge" || i.id.includes("clash-verge")) ?? null
     QsMenuOpener { id: vmenu; menu: root.verge?.menu ?? null }
     readonly property var vpnItems: ["System Proxy", "TUN Mode"]
@@ -171,11 +171,11 @@ Singleton {
     readonly property bool vpn: vpnItems.some(l => vpnItem(l)?.checkState === Qt.Checked)
     property var queue: []
     function toggleVpn() {
-        if (!verge) return Quickshell.execDetached(["clash-verge"]); // спит — разбудить
+        if (!verge) return Quickshell.execDetached(["clash-verge"]); // asleep — wake up
         queue = vpn ? vpnItems.filter(l => vpnItem(l)?.checkState === Qt.Checked) : vpnItems;
         presser.start();
     }
-    // verge пересобирает меню после каждого нажатия — по одному
+    // verge rebuilds menu after each press — one by one
     Timer {
         id: presser
         interval: 350

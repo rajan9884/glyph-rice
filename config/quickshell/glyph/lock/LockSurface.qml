@@ -7,12 +7,12 @@ import qs
 import qs.components
 import qs.services
 
-// блокировка: часы Doto на всю ширину, дата и погода метками, по углам раскладка/сеть/батарея и счёт уведомлений.
-// Внизу аватар в кольце точек, имя и поле-пилюля: введённое — белые точки, каретка красная. Неверный пароль — всё красное, поле трясётся
+// lock: full-width Doto clock, date and weather labels, layout/network/battery and notification count in corners.
+// Bottom: avatar in dot ring, name and pill field: typed — white dots, red caret. Wrong password — all red, field shakes
 WlSessionLockSurface {
     id: root
 
-    required property var auth // { buffer, fail, busy, leaving, note, submit() } из lock.qml
+    required property var auth // { buffer, fail, busy, leaving, note, submit() } from lock.qml
     property string layout: "en"
 
     color: Theme.bg
@@ -23,13 +23,13 @@ WlSessionLockSurface {
     property bool blink: true
     Timer { running: true; interval: 500; repeat: true; onTriggered: root.blink = !root.blink }
 
-    // появление: t 0→1 линейно, у каждого элемента своя фаза с ease-out-quart (как glide): шар и часы, метки, аватар —
-    // кольцо загорается волной, поле вырастает из точки. Пароль принят (auth.leaving) — t назад и быстрее, лок снимает lock.qml
+    // appearance: t 0→1 linear, each element own phase with ease-out-quart (like glide): orb and clock, labels, avatar —
+    // ring lights up in wave, field grows from point. Password accepted (auth.leaving) — t back and faster, lock.qml removes lock
     property real t: 0
     Behavior on t { NumberAnimation { duration: root.auth.leaving ? 450 : 1100 } }
     Component.onCompleted: t = Qt.binding(() => root.auth.leaving ? 0 : 1)
     function ph(a, b) { const x = Math.max(0, Math.min(1, (t - a) / (b - a))); return 1 - Math.pow(1 - x, 4); }
-    // проверка пароля: по введённым точкам бежит волна
+    // password check: wave runs over typed dots
     property real wave: 0
     NumberAnimation on wave { running: root.auth.busy; from: 0; to: 1; duration: 700; loops: Animation.Infinite }
 
@@ -118,8 +118,8 @@ WlSessionLockSurface {
                 height: 96
                 opacity: root.ph(0.3, 0.7)
                 transform: Translate { y: 24 * (1 - root.ph(0.3, 0.7)) }
-                Ring { anchors.fill: parent; n: 32; f: root.t > 0.35 ? 1 : 0 } // загорается и гаснет волной по кругу
-                // ~/.face точками, как обложки; нет файла — градиент Art
+                Ring { anchors.fill: parent; n: 32; f: root.t > 0.35 ? 1 : 0 } // lights up and fades in wave around circle
+                // ~/.face as dots, like covers; no file — Art gradient
                 Art { anchors { fill: parent; margins: 18 } url: `file://${Quickshell.env("HOME")}/.face`; step: 3 }
             }
             Text {
@@ -131,11 +131,11 @@ WlSessionLockSurface {
                 transform: Translate { y: 16 * (1 - root.ph(0.4, 0.75)) }
             }
 
-            // поле: введённые — точки, после каретки — погасшие до шести
+            // field: typed — dots, after caret — unlit up to six
             Rectangle {
                 id: pwd
                 anchors.horizontalCenter: parent.horizontalCenter
-                width: 58 + (380 - 58) * root.ph(0.5, 0.9) // вырастает из точки в пилюлю
+                width: 58 + (380 - 58) * root.ph(0.5, 0.9) // grows from dot into pill
                 height: 58
                 radius: Theme.corner(29)
                 opacity: root.ph(0.45, 0.6)
@@ -149,7 +149,7 @@ WlSessionLockSurface {
                     Repeater {
                         id: typed
                         model: Math.min(root.auth.buffer.length, 16)
-                        // новая точка выщёлкивается; пока pam думает — по точкам бежит волна
+                        // new dot pops in; while pam thinks — wave runs over dots
                         Rectangle {
                             required property int index
                             anchors.verticalCenter: parent.verticalCenter
