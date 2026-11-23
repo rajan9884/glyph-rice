@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# gsr-record — gpu-screen-recorder wrapper for Hyprland keybinds
+# Usage: gsr-record [--region] [--sound]
+#   --region   use slurp to pick a region instead of full monitor
+#   --sound    capture system audio (default_output)
+#
+# Running again while recording is active → stops recording (SIGINT).
+# Output goes to ~/Videos/rec-YYYY-MM-DD_HH-MM-SS.mp4
+
+REGION=false
+SOUND=false
+for arg in "$@"; do
+    case "$arg" in
+        --region) REGION=true ;;
+        --sound)  SOUND=true  ;;
+    esac
+done
+
+# If already recording, stop it
+if pkill -INT -f "^gpu-screen-recorder "; then
+    exit 0
+fi
+
+# Determine capture target
+if $REGION; then
+    SEL=$(slurp -f "%wx%h+%x+%y" 2>/dev/null) || exit 1
+    W_ARGS="-w region -region $SEL"
+else
+    MON=$(hyprctl monitors -j | python3 -c "
+import sys, json
+mons = json.load(sys.stdin)
+focused = next((m for m in mons if m.get('focused')), mons[0])
+print(focused['name'])
+" 2>/dev/null)
+    W_ARGS="-w ${MON:-eDP-1}"
+fi
+
+# Audio args
+A_ARGS=""
+if $SOUND; then
+    A_ARGS="-a default_output"
+fi
+
+OUTDIR=$(xdg-user-dir VIDEOS)
+mkdir -p "$OUTDIR"
+OUTFILE="$OUTDIR/rec-$(date +%F_%H-%M-%S).mp4"
+
+exec gpu-screen-recorder $W_ARGS $A_ARGS -o "$OUTFILE"

@@ -93,13 +93,14 @@ local function toggle_special(name)
     end
 end
 
--- screen recording gpu-screen-recorder: same bind again — stop
+-- screen recording via gsr-record wrapper script (handles stop/start, region slurp, audio)
+-- Same bind pressed again while recording → stops it
 local function record(region, sound)
     return function()
-        local mon = hl.get_active_monitor()
-        local w   = region and '-w region -region "$(slurp -f %wx%h+%x+%y)"' or "-w " .. (mon and mon.name or "region")
-        hl.exec_cmd("pkill -INT -f '^gpu-screen-recorder' || gpu-screen-recorder " .. w ..
-            (sound and " -a default_output" or "") .. ' -o "$(xdg-user-dir VIDEOS)/rec-$(date +%F_%H-%M-%S).mp4"')
+        local args = ""
+        if region then args = args .. " --region" end
+        if sound  then args = args .. " --sound"  end
+        hl.exec_cmd("bash -c 'gsr-record" .. args .. "'")
     end
 end
 
