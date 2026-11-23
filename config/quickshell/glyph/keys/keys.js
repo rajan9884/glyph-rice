@@ -65,8 +65,8 @@ var KEYBINDINGS = [
 
     // Media & System
     { cat: "media & sys", desc: "Screenshot Region", keys: ["Print"], detail: "Also Super + Shift + S" },
-    { cat: "media & sys", desc: "Record Screen (Video)", keys: ["SUPER", "ALT", "R"], detail: "gpu-screen-recorder video capture" },
-    { cat: "media & sys", desc: "Record Screen (Audio+Video)", keys: ["CTRL", "ALT", "R"], detail: "gpu-screen-recorder with audio" },
+    { cat: "media & sys", desc: "Record Screen (Audio+Video)", keys: ["SUPER", "ALT", "R"], detail: "gpu-screen-recorder with audio" },
+    { cat: "media & sys", desc: "Record Screen (Silent)", keys: ["CTRL", "ALT", "R"], detail: "gpu-screen-recorder video capture" },
     { cat: "media & sys", desc: "Record Region", keys: ["SUPER", "SHIFT", "ALT", "R"], detail: "gpu-screen-recorder selected box" },
     { cat: "media & sys", desc: "Color Picker", keys: ["SUPER", "SHIFT", "C"], detail: "hyprpicker magnifier copy hex" },
     { cat: "media & sys", desc: "Volume Up / Down", keys: ["Fn / Volume"], detail: "XF86AudioRaiseVolume / LowerVolume" },

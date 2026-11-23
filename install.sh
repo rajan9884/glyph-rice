@@ -1,47 +1,47 @@
 #!/usr/bin/env bash
-# Glyph: ставит всё на чистый Arch и линкует конфиги из этого репо.
-#   ./install.sh                   пакеты + сервисы + симлинки; спросит, что из EXTRA поставить ещё
-#   ./install.sh --with telegram   то же без вопроса (--with "" — только сам рис)
-#   ./install.sh --links           только симлинки (на уже готовой системе)
-#   ./install.sh --sddm            только тема входа (sudo); после правок в config/sddm — снова
+# Glyph: installs everything on a clean Arch Linux and symlinks configs from this repo.
+#   ./install.sh                   packages + services + symlinks; prompts for optional EXTRA
+#   ./install.sh --with telegram   same without prompt (--with "" — core rice only)
+#   ./install.sh --links           symlinks only (on an already configured system)
+#   ./install.sh --sddm            greeter theme only (sudo); run again after edits to config/sddm
 set -euo pipefail
 
 DOTS="$(cd "$(dirname "$0")" && pwd)"
 BACKUP="$HOME/.dots-backup-$(date +%F_%H-%M-%S)"
 
 PACMAN=(
-    # база
+    # base
     base-devel git curl jq python
-    # сессия
+    # session
     hyprland hypridle hyprsunset hyprpicker xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
     sddm quickshell polkit-gnome gnome-keyring geoclue upower xdg-user-dirs
-    # звук, сеть, bluetooth
+    # audio, network, bluetooth
     pipewire pipewire-pulse pipewire-alsa wireplumber networkmanager bluez bluez-utils blueman power-profiles-daemon
-    # утилиты, которые зовут бинды и шелл
+    # utilities invoked by keybinds and shell
     brightnessctl playerctl wl-clipboard cliphist grim slurp swappy imagemagick libvips libqalculate
-    gpu-screen-recorder ydotool libnotify trash-cli
-    # терминал и консоль
+    gpu-screen-recorder intel-media-driver libva-utils ydotool libnotify trash-cli
+    # terminal and console tools
     kitty zsh zsh-autosuggestions zsh-syntax-highlighting zsh-completions fzf bat fd ripgrep gum tesseract tesseract-data-eng starship fastfetch btop cava eza zoxide direnv lazygit yazi tmux neovim
-    # приложения из variables.lua
-    thunar pavucontrol
-    # шрифты (cjk — каомодзи в Charms), иконки (Papirus-Dark — основа темы папок Rice), тёмная база для gtk.css
+    # apps from variables.lua
+    pavucontrol
+    # fonts (cjk — kaomoji in Charms), icons (Papirus-Dark — folder theme base), dark base for gtk.css
     ttf-jetbrains-mono-nerd noto-fonts noto-fonts-cjk noto-fonts-emoji papirus-icon-theme adw-gtk-theme
 )
 
 AUR=(
     qtengine darkly-bin bibata-cursor-theme-bin
-    zen-browser-bin
+    zen-browser-bin strata-bin
 )
 
-# на выбор, как optional components у caelestia. Что открывают бинды спец-воркспейсов — apps в hypr/variables.lua
+# optional components (caelestia-style). Keybinds in special workspaces launch apps from hypr/variables.lua
 declare -A EXTRA=(
     [telegram]="telegram-desktop"                                        # Super+D
     [spotify]="spotify-launcher spicetify-cli spicetify-marketplace-bin" # Super+M
-    [clash]="clash-verge-rev-bin"                                        # панель VPN, Super+P
+    [clash]="clash-verge-rev-bin"                                        # VPN panel, Super+P
 )
 
 G=config/quickshell/glyph
-# репо-путь → путь в $HOME
+# repo path → path in $HOME
 LINKS=(
     "config/hypr                                .config/hypr"
     "$G                                         .config/quickshell/glyph"
@@ -57,7 +57,7 @@ LINKS=(
     "$G/term/gtk-3.0/gtk.css                    .config/gtk-3.0/gtk.css"
     "$G/term/gtk-4.0/gtk.css                    .config/gtk-4.0/gtk.css"
     "config/fonts                               .local/share/fonts/glyph"
-    # шелл и конфиги
+    # shell and configs
     "config/shell/zshrc                         .zshrc"
     "config/shell/zprofile                      .zprofile"
     "config/shell/bashrc                        .bashrc"
@@ -69,9 +69,11 @@ LINKS=(
     "config/git/gitconfig                       .gitconfig"
     "config/git/gitconfig-personal              .gitconfig-personal"
     "config/git/gitconfig-work                  .gitconfig-work"
-    # инструменты и скрипты
+    # tools and scripts
     "config/lazygit                             .config/lazygit"
     "config/yazi                                .config/yazi"
+    "config/strata                              .config/strata"
+    "config/nvim                                .config/nvim"
     "config/scripts/fcs                         .local/bin/fcs"
     "config/scripts/ff                          .local/bin/ff"
     "config/scripts/ffd                         .local/bin/ffd"
@@ -81,11 +83,14 @@ LINKS=(
     "config/scripts/git-whoami                  .local/bin/git-whoami"
     "config/scripts/ocr-extract                 .local/bin/ocr-extract"
     "config/scripts/ttfx                        .local/bin/ttfx"
+    "config/scripts/wifi-enterprise             .local/bin/wifi-enterprise"
+    "config/scripts/power-profile-switch        .local/bin/power-profile-switch"
+    "config/scripts/gsr-record                  .local/bin/gsr-record"
 )
 
 say() { printf '\e[38;2;215;25;33m●\e[0m %s\n' "$*"; }
 
-extras() { # --with или вопрос → в EXT, ставит yay (и из репо) отдельно от AUR
+extras() { # --with or interactive prompt → EXT, installs via yay separately from core AUR
     local w; EXT=()
     if [ -z "${WITH+x}" ]; then
         say "anything else to install? space-separated, Enter for none"
@@ -100,12 +105,12 @@ extras() { # --with или вопрос → в EXT, ставит yay (и из р
 
 packages() {
     say "pacman"
-    # модули pulseaudio требуют его самого — pacman не дал бы заменить его на pipewire-pulse.
-    # Списком, не grep '^pulseaudio-': pulseaudio-alsa и pulseaudio-qt с pipewire живут
+    # pulseaudio modules require pulseaudio itself — pacman would block replacing with pipewire-pulse.
+    # List explicitly, not grep '^pulseaudio-': pulseaudio-alsa and pulseaudio-qt coexist with pipewire
     local pa; pa=$(pacman -Qq pulseaudio-{bluetooth,jack,lirc,rtp,zeroconf,equalizer,equalizer-ladspa} 2>/dev/null || true)
     [ -z "$pa" ] || sudo pacman -R $pa
     pacman -Q pulseaudio &>/dev/null && say "pacman will ask \"Remove pulseaudio?\": answer y, pipewire-pulse replaces it"
-    # без --noconfirm: на конфликте (pulseaudio → pipewire-pulse) он ответил бы «нет» и уронил установку
+    # without --noconfirm: on conflict (pulseaudio → pipewire-pulse) it would default to 'no' and abort
     sudo pacman -Syu --needed "${PACMAN[@]}"
 
     if ! command -v yay >/dev/null; then
@@ -117,9 +122,9 @@ packages() {
     fi
 
     say "aur"
-    # AUR необязателен: упал пакет — сервисы и ссылки всё равно ставим
+    # AUR is optional: if package fails — proceed with services and symlinks anyway
     yay -S --needed --noconfirm "${AUR[@]}" || say "aur: some packages failed, see above"
-    # отдельно: не собрался spicetify — ядро AUR от этого не страдает
+    # separate: if spicetify fails to build — core AUR remains unaffected
     [ ${#EXT[@]} -eq 0 ] || yay -S --needed --noconfirm "${EXT[@]}" || say "extras: some packages failed, see above"
 }
 
@@ -129,8 +134,18 @@ services() {
     systemctl is-enabled -q display-manager.service 2>/dev/null || sudo systemctl enable sddm
     systemctl --user enable pipewire-pulse.socket wireplumber ydotool
     sudo usermod -aG video "$USER" # brightnessctl
-    # ydotool пишет в /dev/uinput: доступ — тому, кто сидит за машиной (uaccess, как steam-devices). Не группа input: та
-    # читает /dev/input/event* — любой процесс пользователя видел бы все нажатия, пароли тоже. Применится после перезагрузки
+
+    # Dynamic power profile switching on AC (performance) / Battery (balanced)
+    sudo cp "$DOTS/config/scripts/power-profile-switch" /usr/local/bin/power-profile-switch
+    sudo chmod +x /usr/local/bin/power-profile-switch
+    sudo cp "$DOTS/config/udev/99-power-switch.rules" /etc/udev/rules.d/99-power-switch.rules
+    sudo cp "$DOTS/config/systemd/power-profile-switch.service" /etc/systemd/system/power-profile-switch.service
+    sudo udevadm control --reload 2>/dev/null || true
+    sudo systemctl daemon-reload 2>/dev/null || true
+    sudo systemctl enable power-profile-switch.service 2>/dev/null || true
+
+    # ydotool writes to /dev/uinput: access given to active desktop user (uaccess, like steam-devices). Not 'input' group: that
+    # reads /dev/input/event* — any user process could snoop keystrokes/passwords. Takes effect after reboot
     echo 'KERNEL=="uinput", SUBSYSTEM=="misc", TAG+="uaccess", OPTIONS+="static_node=uinput"' \
         | sudo tee /etc/udev/rules.d/70-glyph-uinput.rules >/dev/null
     xdg-user-dirs-update
@@ -151,13 +166,13 @@ links() {
         ln -s "$src" "$dst"
         echo "  $dst"
     done
-    # rules.json и kitty.conf шелл создаст сам; rice поднимет glyph и соберёт тему папок
+    # rules.json and kitty.conf will be generated by shell; rice starts glyph and builds folder theme
     mkdir -p "$HOME/.config/demonshot" "${XDG_STATE_HOME:-$HOME/.local/state}/rice"
     echo glyph > "${XDG_STATE_HOME:-$HOME/.local/state}/rice/shell"
-    mkdir -p "$HOME/Pictures/Wallpapers" # пикер обоев (Super+Shift+W) смотрит сюда
+    mkdir -p "$HOME/Pictures/Wallpapers" # wallpaper picker (Super+Shift+W) reads from here
     fc-cache -f >/dev/null
 
-    # ssh config для dual-account github
+    # SSH config for dual-account github
     mkdir -p "$HOME/.ssh"
     if ! grep -q "Host github.com-personal" "$HOME/.ssh/config" 2>/dev/null; then
         cat <<'SSH_SNIP' >> "$HOME/.ssh/config"
@@ -178,33 +193,36 @@ SSH_SNIP
     chmod 700 "$HOME/.ssh" 2>/dev/null || true
     chmod 600 "$HOME/.ssh/config" 2>/dev/null || true
 
-    # переключение дефолтного шелла на zsh
+    # Switch default shell to zsh
     if command -v zsh >/dev/null 2>&1 && [ "${SHELL:-}" != "$(command -v zsh)" ]; then
         chsh -s "$(command -v zsh)" 2>/dev/null || sudo chsh -s "$(command -v zsh)" "$USER" 2>/dev/null || true
     fi
 
-    command -v gsettings >/dev/null || return 0 # --links на системе без GNOME-схем
-    # тёмный режим для Zen, Electron и libadwaita (через портал) и тёмная gtk3-база под наш gtk.css
+    command -v gsettings >/dev/null || return 0 # --links on systems without GNOME schemas
+    # Dark mode for Zen, Electron, and libadwaita (via portal) and dark gtk3 base for our gtk.css
     gsettings set org.gnome.desktop.interface color-scheme prefer-dark
     gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3-dark
+    # set strata as default file manager
+    command -v xdg-mime >/dev/null && xdg-mime default io.github.lgse.Strata.desktop inode/directory 2>/dev/null || true
+    command -v xdg-mime >/dev/null && xdg-mime default io.github.lgse.Strata.desktop x-scheme-handler/trash 2>/dev/null || true
 }
 
-greeter() { # тема входа. Копия, а не ссылка: пользователь sddm не прочтёт закрытый $HOME
+greeter() { # Login theme. Copy rather than symlink: sddm user cannot read restricted $HOME
     say "sddm: glyph theme"
     [ -d /usr/share/sddm/themes ] || { say "sddm isn't installed, skipping the theme"; return 0; }
-    # rm: файлы, удалённые из репо, не остаются висеть в теме; chmod: при umask 077 копия вышла бы 600 и sddm её не прочтёт
+    # rm: files removed from repo don't linger in theme; chmod: umask 077 would copy as 600 which sddm cannot read
     sudo rm -rf /usr/share/sddm/themes/glyph
-    # без -L: root не идёт по ссылкам из темы — ссылка на /etc/shadow стала бы копией, читаемой всем после chmod.
-    # Единственная своя ссылка, fonts → config/fonts, заменяется самими шрифтами
+    # without -L: root does not follow symlinks from theme — link to /etc/shadow would become readable to all after chmod.
+    # The only internal symlink, fonts → config/fonts, is replaced with fonts themselves
     sudo cp -rT "$DOTS/config/sddm/glyph" /usr/share/sddm/themes/glyph
     sudo rm /usr/share/sddm/themes/glyph/fonts
     sudo cp -rT "$DOTS/config/fonts" /usr/share/sddm/themes/glyph/fonts
     sudo chmod -R a+rX /usr/share/sddm/themes/glyph
-    # InputMethod пустой: умолчание sddm — qtvirtualkeyboard, и с этой темой вылезает экранная клавиатура на весь экран
+    # Empty InputMethod: sddm default is qtvirtualkeyboard which displays a full-screen on-screen keyboard with this theme
     sudo mkdir -p /etc/sddm.conf.d
-    # zz-: файлы conf.d читаются по алфавиту, следующий перекрывает — наш последним, поверх чужих (virtualkbd.conf у astronaut)
+    # zz-: conf.d files are read alphabetically, subsequent files override — ours loaded last over third-party configs
     printf '[Theme]\nCurrent=glyph\n\n[General]\nInputMethod=\n' | sudo tee /etc/sddm.conf.d/zz-glyph.conf >/dev/null
-    # /etc/sddm.conf главнее conf.d
+    # /etc/sddm.conf takes precedence over conf.d
     if grep -qsE '^\s*Current=' /etc/sddm.conf && ! grep -qsE '^\s*Current=glyph\s*$' /etc/sddm.conf; then
         say "/etc/sddm.conf sets its own theme and wins over conf.d: set Current=glyph there"
     fi
@@ -213,12 +231,12 @@ greeter() { # тема входа. Копия, а не ссылка: польз�
 [ "$EUID" -eq 0 ] && { echo "run as your user, not root: sudo asks when it needs to"; exit 1; }
 
 case "${1:-}" in
-    --links) links ;; # на любом дистрибутиве (NixOS, Fedora…): пакеты тогда свои, список — в README
+    --links) links ;; # on any distribution (NixOS, Fedora…): install native packages, package list in README
     --sddm) greeter ;;
     ""|--with) command -v pacman >/dev/null || { echo "packages install on Arch only; on another distro: $0 --links"; exit 1; }
-        [ "${1:-}" = --with ] && WITH="${*:2}" # и через запятую, и через пробел
+        [ "${1:-}" = --with ] && WITH="${*:2}" # comma- or space-separated
         extras; packages; services; links; greeter
-        # spicetify нужен уже скачанный Spotify с входом в аккаунт, поэтому применять до первого запуска нечего
+        # spicetify requires Spotify already installed and logged in; nothing to apply before first launch
         [[ " ${WITH//,/ } " == *" spotify "* ]] && say "spotify: launch it, log in, then run spicetify config custom_apps marketplace && spicetify backup apply"
         say "done. reboot and pick Hyprland in sddm" ;;
     *) echo "usage: $0 [--with telegram,spotify,clash | --links | --sddm]"; exit 1 ;;
