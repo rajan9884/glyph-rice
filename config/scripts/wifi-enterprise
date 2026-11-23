@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Connect to WPA2/WPA3 Enterprise (802.1X / PEAP / MSCHAPv2) Wi-Fi network like srmap-byod
+set -euo pipefail
+
+SSID="${1:-}"
+IDENTITY="${2:-}"
+PASSWORD="${3:-}"
+
+if [ -z "$SSID" ]; then
+    if command -v gum >/dev/null 2>&1; then
+        SSID=$(gum input --placeholder "SSID (e.g. srmap-byod)")
+    else
+        read -rp "SSID: " SSID
+    fi
+fi
+
+if [ -z "$SSID" ]; then
+    echo "Error: SSID is required."
+    exit 1
+fi
+
+if [ -z "$IDENTITY" ]; then
+    if command -v gum >/dev/null 2>&1; then
+        IDENTITY=$(gum input --placeholder "Identity / Username (e.g. NetID / Reg No)")
+    else
+        read -rp "Identity / Username: " IDENTITY
+    fi
+fi
+
+if [ -z "$IDENTITY" ]; then
+    echo "Error: Identity is required."
+    exit 1
+fi
+
+if [ -z "$PASSWORD" ]; then
+    if command -v gum >/dev/null 2>&1; then
+        PASSWORD=$(gum input --password --placeholder "Password")
+    else
+        read -rsp "Password: " PASSWORD
+        echo
+    fi
+fi
+
+echo "Configuring NetworkManager connection for '$SSID'..."
+nmcli connection delete "$SSID" 2>/dev/null || true
+
+nmcli connection add type wifi ifname "*" con-name "$SSID" ssid "$SSID" \
+    wifi-sec.key-mgmt wpa-eap \
+    802-1x.eap peap \
+    802-1x.phase2-auth mschapv2 \
+    802-1x.identity "$IDENTITY" \
+    802-1x.password "$PASSWORD"
+
+echo "Connecting to '$SSID'..."
+nmcli connection up "$SSID"
+echo "Successfully connected to '$SSID'!"

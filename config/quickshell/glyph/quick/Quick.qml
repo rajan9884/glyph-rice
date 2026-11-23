@@ -425,7 +425,7 @@ PanelWindow {
         Icon { anchors.centerIn: parent; text: parent.icon }
         TapHandler { onTapped: { root.pin(); parent.clicked(); } }
     }
-    // pill: on — white, text black. Right click — networks/devices list, chevron shows open
+    // pill: on — white, text black. Click body — toggle on/off, click chevron or right click — networks/devices list
     component Pill: Rectangle {
         id: pill
         property bool on
@@ -451,7 +451,7 @@ PanelWindow {
             Icon { anchors.centerIn: parent; text: pill.icon; font.pixelSize: 22 }
         }
         Column {
-            anchors { left: pi.right; leftMargin: 12; right: chev.left; rightMargin: 8; verticalCenter: parent.verticalCenter }
+            anchors { left: pi.right; leftMargin: 12; right: chevArea.left; rightMargin: 6; verticalCenter: parent.verticalCenter }
             Text { text: pill.name; font { family: Theme.ui; pixelSize: 16; weight: Font.DemiBold } color: pill.on ? Theme.ink : Theme.fg }
             Text {
                 width: parent.width
@@ -463,18 +463,42 @@ PanelWindow {
                 opacity: 0.6
             }
         }
-        Icon {
-            id: chev
-            anchors { right: parent.right; rightMargin: 20; verticalCenter: parent.verticalCenter }
-            text: "\u{F0140}"
-            font.pixelSize: 18
-            color: pill.on ? Theme.ink : Theme.fg
-            opacity: pill.picked ? 1 : 0.4
-            rotation: pill.picked ? 180 : 0
-            Behavior on rotation { NumberAnimation { duration: Theme.t; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.glide } }
+        Item {
+            id: chevArea
+            anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
+            width: 52
+            Icon {
+                id: chev
+                anchors.centerIn: parent
+                text: "\u{F0140}"
+                font.pixelSize: 18
+                color: pill.on ? Theme.ink : Theme.fg
+                opacity: pill.picked ? 1 : 0.4
+                rotation: pill.picked ? 180 : 0
+                Behavior on rotation { NumberAnimation { duration: Theme.t; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.glide } }
+            }
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    root.pin();
+                    pill.menu();
+                }
+            }
         }
-        TapHandler { onTapped: { root.pin(); pill.clicked(); } }
-        TapHandler { acceptedButtons: Qt.RightButton; onTapped: { root.pin(); pill.menu(); } }
+        MouseArea {
+            anchors { left: parent.left; top: parent.top; bottom: parent.bottom; right: chevArea.left }
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            cursorShape: Qt.PointingHandCursor
+            onClicked: mouse => {
+                root.pin();
+                if (mouse.button === Qt.RightButton) {
+                    pill.menu();
+                } else {
+                    pill.clicked();
+                }
+            }
+        }
     }
     // round tile 68: on — white circle. Right click — menu (for record — recording settings), open — white label
     component Tile: Column {

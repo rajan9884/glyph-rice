@@ -19,6 +19,7 @@ import "settings"
 import "shot"
 import "vpn"
 import "wall"
+import "keys"
 
 // glyph: rice in nothing os spirit. Home on wallpaper, bar, launcher, quick settings,
 // Glyph bars at edges instead of OSD, notification island, power menu, settings, deck (dashboard bottom), clipboard, charms (emoji and symbols), screenshots, vpn, wallpaper. Lock — separate process (lock.qml).
@@ -44,6 +45,7 @@ ShellRoot {
     Shot { id: shot }
     Vpn { id: vpn; wifiNetwork: quick.net }
     Walls { id: walls }
+    Keys { id: keys }
 
     Variants {
         model: Quickshell.screens
@@ -125,19 +127,12 @@ ShellRoot {
         function onGameChanged() { Rules.motion(); Theme.apply(); }
     }
 
-    // Super tap — launcher on release; any Super+<key> along the way sends interrupt, launcher doesn't open
-    property bool interrupted: false
-    Shortcut {
-        name: "launcher"
-        description: "launcher (tap Super)"
-        onReleased: {
-            if (!shell.interrupted) launcher.toggle();
-            shell.interrupted = false;
-        }
-    }
-    Shortcut { name: "launcherArm"; description: "Super pressed — reset interrupt"; onPressed: shell.interrupted = false }
-    Shortcut { name: "launcherInterrupt"; description: "Super+<key> — don't open the launcher"; onPressed: shell.interrupted = true }
-    // Super+Space (altar at demonshot) — deck, bottom dashboard: launcher already on Super tap
+    // Launcher opens only on Super+Space (shell:menu). Super tap removed.
+    // launcherArm/launcherInterrupt kept so demonshot shell compat stubs don't error
+    Shortcut { name: "launcher"; description: "launcher (unused — use Super+Space)"; onPressed: {} }
+    Shortcut { name: "launcherArm"; description: "stub — no-op"; onPressed: {} }
+    Shortcut { name: "launcherInterrupt"; description: "stub — no-op"; onPressed: {} }
+    // Super+Space → deck / bottom dashboard
     Shortcut { name: "altar"; description: "deck: bottom dashboard"; onPressed: deck.toggle() }
     Shortcut { name: "quick"; description: "quick settings"; onPressed: quick.toggle() }
     Shortcut { name: "ward"; description: "quick settings"; onPressed: quick.toggle() } // Super+N at demonshot — same toggles
@@ -148,6 +143,8 @@ ShellRoot {
     Shortcut { name: "clip"; description: "clipboard"; onPressed: clip.toggle() }
     Shortcut { name: "charms"; description: "emoji, kaomoji, symbols"; onPressed: charms.toggle() }
     Shortcut { name: "wall"; description: "wallpapers"; onPressed: walls.toggle() }
+    Shortcut { name: "menu"; description: "app launcher menu"; onPressed: launcher.toggle() }
+    Shortcut { name: "keys"; description: "keybindings cheatsheet"; onPressed: keys.toggle() }
     Shortcut { name: "game"; description: "game mode"; onPressed: Rules.store.game = !Rules.store.game }
 
     component Shortcut: GlobalShortcut { appid: "shell" }

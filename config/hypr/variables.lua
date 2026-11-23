@@ -21,8 +21,8 @@ return {
 
     -- Apps
     terminal                   = "kitty", -- not -1: shared process, broke GL after sleep (AMD and Intel), whitened all new windows until reboot (#12); cost — ~230ms vs ~20
-    browser                    = "zen-browser",
-    fileExplorer               = "thunar",
+    browser                    = "helium-browser",
+    fileExplorer               = "strata",
     audioSettings              = "pavucontrol",
     -- special workspace apps (launch if empty) and editor. Binds read them on press,
     -- so custom ones go in user.lua: require("variables").apps.editor = "codium". Not set — opens empty workspace.
@@ -83,7 +83,7 @@ return {
     ------------------
 
     -- Workspaces
-    kbMoveWinToWs              = "SUPER + ALT",
+    kbMoveWinToWs              = "SUPER + SHIFT",
     kbMoveWinToWsGroup         = "CTRL + SUPER + ALT",
     kbGoToWs                   = "SUPER",
     kbGoToWsGroup              = "CTRL + SUPER",
@@ -98,13 +98,13 @@ return {
 
     -- Window Action
     kbMoveWindow               = "SUPER + Z",
-    kbResizeWindow             = "SUPER + X",
+    kbResizeWindow             = "SUPER + ALT + X",
     kbWindowPip                = "SUPER + ALT + backslash",
     kbPinWindow                = "SUPER + SHIFT + P", -- Super+P — VPN agreement
     kbWindowFullscreen         = "SUPER + F",
     kbWindowBorderedFullscreen = "SUPER + ALT + F",
-    kbToggleWindowFloating     = "SUPER + ALT + space",
-    kbCloseWindow              = "SUPER + C",
+    kbToggleWindowFloating     = "SUPER + T",
+    kbCloseWindow              = "SUPER + W",
 
     -- Special workspaces toggles
     kbSpecialWs                = "SUPER + S",
@@ -114,15 +114,15 @@ return {
     kbTodoWs                   = "SUPER + R",
 
     -- Apps
-    kbTerminal                 = "SUPER + Q",
-    kbBrowser                  = "SUPER + W",
+    kbTerminal                 = "SUPER + Return",
+    kbBrowser                  = "SUPER + SHIFT + B",
     kbEditor                   = "SUPER + SHIFT + K",
     kbFileExplorer             = "SUPER + E",
 
     -- Misc
     kbSession                  = "CTRL + ALT + Delete",
     kbPower                    = "SUPER + Escape",
-    kbAltar                    = "SUPER + Space",
-    kbLock                     = "SUPER + L",
+    kbAltar                    = "ALT + Space",
+    kbLock                     = "SUPER + CTRL + L",
     kbRestoreLock              = "SUPER + ALT + L",
 }

@@ -1,0 +1,81 @@
+-- Glyph: Which-key — Keybinding help
+
+return {
+  "folke/which-key.nvim",
+  event = "VeryLazy",
+  config = function()
+    local wk = require("which-key")
+    wk.setup({
+      preset = "modern",
+      delay = 200,
+      filter = function(mapping)
+        return mapping.desc and mapping.desc ~= ""
+      end,
+      spec = {
+        { "<leader>f", group = "Find" },
+        { "<leader>g", group = "Git" },
+        { "<leader>h", group = "Hunks" },
+        { "<leader>l", group = "LSP" },
+        { "<leader>c", group = "Code" },
+        { "<leader>w", group = "Windows" },
+        { "<leader>b", group = "Buffers" },
+        { "<leader>q", group = "Quit/Session" },
+        { "<leader>t", group = "Terminal/Toggles" },
+        { "<leader>u", group = "UI/Toggles" },
+        { "]", group = "Next" },
+        { "[", group = "Prev" },
+        { "g", group = "Goto" },
+      },
+      icons = {
+        breadcrumb = "»",
+        separator = "➜",
+        group = "+",
+        ellipsis = "…",
+        mappings = true,
+        keys = {
+          Up = "▲",
+          Down = "▼",
+          Left = "◀",
+          Right = "▶",
+          C = "Ctrl",
+          M = "Alt",
+          S = "Shift",
+          CR = "Enter",
+          Esc = "Esc",
+          ScrollWheelDown = "⇣",
+          ScrollWheelUp = "⇡",
+          NL = "⏎",
+          BS = "⌫",
+          Space = "␣",
+          Tab = "⇥",
+          F1 = "F1",
+          F2 = "F2",
+          F3 = "F3",
+          F4 = "F4",
+          F5 = "F5",
+          F6 = "F6",
+          F7 = "F7",
+          F8 = "F8",
+          F9 = "F9",
+          F10 = "F10",
+          F11 = "F11",
+          F12 = "F12",
+        },
+      },
+      win = {
+        border = "rounded",
+        padding = { 1, 2 },
+        wo = { winblend = 0 },
+      },
+      layout = {
+        height = { min = 4, max = 25 },
+        width = { min = 20, max = 50 },
+        spacing = 3,
+        align = "left",
+      },
+      show_help = true,
+      show_keys = true,
+      disable = { bt = {}, ft = {} },
+    })
+  end,
+}

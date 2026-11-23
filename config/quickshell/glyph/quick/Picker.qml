@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell.Bluetooth
 import Quickshell.Networking
+import Quickshell.Io
 import qs
 import qs.components
 
@@ -24,6 +25,13 @@ Rectangle {
     readonly property bool portal: Networking.connectivity === NetworkConnectivity.Portal
 
     property var ask: null // network that needs a password
+    readonly property bool isEnterprise: root.ask ? (
+        root.ask.security === WifiSecurityType.Wpa2Eap ||
+        root.ask.security === WifiSecurityType.WpaEap ||
+        root.ask.security === WifiSecurityType.Wpa3SuiteB192 ||
+        /enterprise|eap|802\.1x/i.test(WifiSecurityType.toString(root.ask.security)) ||
+        /byod|univfi/i.test(root.ask.name || "")
+    ) : false
     // trust — when pairing done, not before: trusted BlueZ lets incoming connections without ask, and cancelled
     // pairing with foreign "headphone" would leave it trusted. Trusted reconnects itself (headphones from case)
     property var pend: null
@@ -36,10 +44,16 @@ Rectangle {
     onKindChanged: { if (kind === "wifi" || kind === "bt") shown = kind; ask = null; err = ""; fl.contentY = 0; }
     onAskChanged: {
         pw.clear();
-        if (ask) Qt.callLater(revealPassword);
-        else {
+        ident.clear();
+        if (ask) {
+            Qt.callLater(revealPassword);
+            Qt.callLater(() => {
+                if (root.isEnterprise) ident.forceActiveFocus();
+                else pw.forceActiveFocus();
+            });
+        } else {
             fl.contentY = 0;
-            if (pw.activeFocus) root.forceActiveFocus();
+            if (pw.activeFocus || ident.activeFocus) root.forceActiveFocus();
         }
     }
     function revealPassword() {
@@ -65,7 +79,7 @@ Rectangle {
     function btIcon(i) {
         return /audio|head/.test(i) ? "\u{F02CB}" : /mouse/.test(i) ? "\u{F037D}" : /keyboard/.test(i) ? "\u{F030C}" : /phone/.test(i) ? "\u{F03F2}" : "\u{F00AF}";
     }
-    // ponytail: enterprise (EAP) won't fit here — only psk; if needed — nmcli in demonshot Settings
+    // Supports both WPA-Personal (PSK) and WPA-Enterprise (802.1X EAP-PEAP)
     function tap(o) {
         touched();
         err = "";
@@ -110,7 +124,7 @@ Rectangle {
                     x: 4
                     anchors.verticalCenter: parent.verticalCenter
                     text: !root.on ? `${root.isWifi ? "wi-fi" : "bluetooth"} · off`
-                        : root.ask ? "password"
+                        : root.ask ? (root.isEnterprise ? "enterprise credentials" : "password")
                         : root.isWifi ? `networks · ${root.nets.length}` : `devices · ${root.bt?.discovering ? "searching" : root.devs.length}`
                 }
                 Lb {
@@ -191,34 +205,101 @@ Rectangle {
             Rectangle {
                 visible: !!root.ask
                 width: list.width
-                height: 56
+                height: root.isEnterprise ? 104 : 56
                 radius: Theme.corner(28)
                 color: Theme.s1
                 border { width: 1; color: Theme.s3 }
-                onVisibleChanged: if (visible) pw.forceActiveFocus()
-                TextInput {
-                    id: pw
-                    anchors { left: parent.left; leftMargin: 22; right: go.left; rightMargin: 12; verticalCenter: parent.verticalCenter }
-                    echoMode: TextInput.Password
-                    passwordCharacter: "•"
-                    font { family: Theme.mono; pixelSize: 16; letterSpacing: 2 }
-                    color: Theme.fg
-                    selectionColor: Theme.fg
-                    selectedTextColor: Theme.ink
-                    clip: true
-                    onAccepted: if (text) go.send()
-                    Lb { visible: !pw.text; anchors.verticalCenter: parent.verticalCenter; text: "enter password"; color: Theme.mute }
+                clip: true
+
+                Column {
+                    anchors.fill: parent
+
+                    Item {
+                        visible: root.isEnterprise
+                        width: parent.width
+                        height: root.isEnterprise ? 48 : 0
+                        TextInput {
+                            id: ident
+                            anchors { left: parent.left; leftMargin: 22; right: parent.right; rightMargin: 22; verticalCenter: parent.verticalCenter }
+                            font { family: Theme.mono; pixelSize: 14 }
+                            color: Theme.fg
+                            selectionColor: Theme.fg
+                            selectedTextColor: Theme.ink
+                            clip: true
+                            onAccepted: pw.forceActiveFocus()
+                            Lb { visible: !ident.text; anchors.verticalCenter: parent.verticalCenter; text: "identity / username"; color: Theme.mute }
+                        }
+                    }
+
+                    Rectangle {
+                        visible: root.isEnterprise
+                        width: parent.width - 28
+                        height: root.isEnterprise ? 1 : 0
+                        color: Theme.s3
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+
+                    Item {
+                        width: parent.width
+                        height: root.isEnterprise ? 55 : 56
+                        TextInput {
+                            id: pw
+                            anchors { left: parent.left; leftMargin: 22; right: go.left; rightMargin: 12; verticalCenter: parent.verticalCenter }
+                            echoMode: TextInput.Password
+                            passwordCharacter: "•"
+                            font { family: Theme.mono; pixelSize: 16; letterSpacing: 2 }
+                            color: Theme.fg
+                            selectionColor: Theme.fg
+                            selectedTextColor: Theme.ink
+                            clip: true
+                            onAccepted: if ((root.isEnterprise ? !!ident.text : true) && !!text) go.send()
+                            Lb { visible: !pw.text; anchors.verticalCenter: parent.verticalCenter; text: "enter password"; color: Theme.mute }
+                        }
+                        Rectangle {
+                            id: go
+                            readonly property bool ready: root.isEnterprise ? (!!ident.text && !!pw.text) : !!pw.text
+                            function send() {
+                                root.touched();
+                                if (root.isEnterprise) {
+                                    connectEap.ssid = root.ask.name;
+                                    connectEap.user = ident.text;
+                                    connectEap.pass = pw.text;
+                                    connectEap.running = true;
+                                } else {
+                                    root.ask.connectWithPsk(pw.text);
+                                }
+                                ident.text = "";
+                                pw.text = "";
+                                root.ask = null;
+                            }
+                            anchors { right: parent.right; rightMargin: 6; verticalCenter: parent.verticalCenter }
+                            width: 44
+                            height: 44
+                            radius: 22
+                            color: ready ? Theme.fg : Theme.s3
+                            Icon { anchors.centerIn: parent; text: "\u{F0054}"; font.pixelSize: 19; color: go.ready ? Theme.ink : Theme.grey }
+                            TapHandler { onTapped: if (go.ready) go.send() }
+                        }
+                    }
                 }
-                Rectangle {
-                    id: go
-                    function send() { root.touched(); root.ask.connectWithPsk(pw.text); pw.text = ""; root.ask = null; }
-                    anchors { right: parent.right; rightMargin: 6; verticalCenter: parent.verticalCenter }
-                    width: 44
-                    height: 44
-                    radius: 22
-                    color: pw.text ? Theme.fg : Theme.s3
-                    Icon { anchors.centerIn: parent; text: "\u{F0054}"; font.pixelSize: 19; color: pw.text ? Theme.ink : Theme.grey }
-                    TapHandler { onTapped: if (pw.text) go.send() }
+            }
+
+            Process {
+                id: connectEap
+                property string ssid: ""
+                property string user: ""
+                property string pass: ""
+                command: [
+                    "bash", "-c",
+                    'con="$1"; usr="$2"; pass="$3"; ' +
+                    'nmcli connection delete "$con" 2>/dev/null; ' +
+                    'nmcli connection add type wifi ifname "*" con-name "$con" ssid "$con" ' +
+                    'wifi-sec.key-mgmt wpa-eap 802-1x.eap peap 802-1x.phase2-auth mschapv2 ' +
+                    '802-1x.identity "$usr" 802-1x.password "$pass" && nmcli connection up "$con"',
+                    "--", ssid, user, pass
+                ]
+                onExited: (code) => {
+                    if (code !== 0) root.err = "connection failed";
                 }
             }
 

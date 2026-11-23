@@ -103,12 +103,34 @@ local function record(region, sound)
     end
 end
 
+-- Toggle active window between tiling and centered floating
+local function toggle_floating_centered()
+    local win = hl.get_active_window()
+    if not win then return end
+    if win.floating then
+        hl.dispatch(hl.dsp.window.float({ action = "off" }))
+    else
+        if win.fullscreen and win.fullscreen ~= 0 then
+            hl.dispatch(hl.dsp.window.fullscreen({ mode = "none" }))
+        end
+        hl.dispatch(hl.dsp.window.float({ action = "on" }))
+        local screen = hl.get_active_monitor()
+        local mon_w = (screen and screen.width) and (screen.width / (screen.scale or 1)) or 1920
+        local mon_h = (screen and screen.height) and (screen.height / (screen.scale or 1)) or 1080
+        local target_w = math.floor(math.min(960, mon_w * 0.75))
+        local target_h = math.floor(math.min(620, mon_h * 0.75))
+        hl.dispatch(hl.dsp.window.resize({ x = target_w, y = target_h, relative = false }))
+        hl.dispatch(hl.dsp.window.center())
+    end
+end
+
 return {
-    toggle_special       = toggle_special,
-    record               = record,
-    resizer              = resizer,
-    resize_by_screen     = resize_by_screen,
-    resize_active_window = resize_active_window,
-    wsaction             = wsaction,
-    move_actions         = move_actions,
+    toggle_special           = toggle_special,
+    record                   = record,
+    resizer                  = resizer,
+    resize_by_screen         = resize_by_screen,
+    resize_active_window     = resize_active_window,
+    wsaction                 = wsaction,
+    move_actions             = move_actions,
+    toggle_floating_centered = toggle_floating_centered,
 }

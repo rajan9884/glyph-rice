@@ -1,0 +1,6 @@
+version = 1
+active = 0
+
+[[tabs]]
+kind = "path"
+value = "/home/rajan"

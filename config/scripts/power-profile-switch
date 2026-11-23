@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Switch power profiles dynamically based on AC / Battery state
+set -euo pipefail
+
+online=$(cat /sys/class/power_supply/ACAD/online 2>/dev/null || cat /sys/class/power_supply/*/online 2>/dev/null | head -n 1 || echo 0)
+if [ "$online" = "1" ]; then
+    /usr/bin/powerprofilesctl set performance
+    logger -t power-switch "AC connected: switched to performance profile"
+else
+    /usr/bin/powerprofilesctl set balanced
+    logger -t power-switch "Battery active: switched to balanced profile"
+fi

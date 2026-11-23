@@ -20,6 +20,10 @@ hl.config({
         background_color             = "rgb(" .. scheme.void .. ")",
     },
 
+    xwayland = {
+        enabled = false,
+    },
+
     -- without auto-HDR: Chromium/Electron window in fullscreen switched panel to HDR — modeset (screen flickers, ~1s
     -- compositor waits) and SDR in HDR is darker
     render = {

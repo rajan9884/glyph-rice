@@ -1,0 +1,316 @@
+/* Glyph Nothing OS Theme for Strata
+ * Matches the Glyph rice aesthetic: black background, white text, crimson accent
+ * Loaded automatically by Strata from ~/.config/strata/style.css
+ */
+
+/* Strata's main window class - based on application ID */
+strata,
+io-github-lgse-strata,
+.io.github.lgse.Strata {
+    /* Base colors are handled by Strata's theme system */
+}
+
+/* ---- General pill-shaped buttons and entries (matches Glyph) ---- */
+button, entry {
+    border-radius: 999px;
+}
+entry {
+    padding-left: 14px;
+    padding-right: 14px;
+}
+.linked:not(.vertical) > button:not(:first-child),
+.linked:not(.vertical) > entry:not(:first-child) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+.linked:not(.vertical) > button:not(:last-child),
+.linked:not(.vertical) > entry:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+.linked.vertical > button,
+.linked.vertical > entry {
+    border-radius: 12px;
+}
+popover > contents,
+popover.background {
+    border-radius: 24px;
+}
+
+/* Toggle switch - white track, black thumb (visible on white) */
+switch:checked slider {
+    background-color: #000000;
+}
+
+/* Scrollbars - pill shaped */
+scrollbar slider {
+    border-radius: 999px;
+    background-color: #4A4A4A;
+}
+scrollbar slider:hover,
+scrollbar slider:active {
+    background-color: #8C8C8C;
+}
+
+/* ---- Strata-specific styling ---- */
+/* Main window */
+strata window,
+strata window.main {
+    background-color: #000000;
+    color: #F2F2F2;
+}
+
+/* Sidebar / places pane */
+strata sidebar,
+strata .sidebar,
+strata .places-sidebar,
+strata .places {
+    background-color: #000000;
+    color: #F2F2F2;
+}
+strata .sidebar .view,
+strata .places .view {
+    background: none;
+}
+strata .sidebar .view,
+strata .places .view {
+    padding: 8px 12px;
+    border-radius: 999px;
+}
+strata .sidebar .view:hover,
+strata .places .view:hover {
+    background-color: #1A1A1A;
+}
+strata .sidebar .view:selected,
+strata .places .view:selected {
+    background-color: #F2F2F2;
+    color: #000000;
+}
+
+/* File view / browser area */
+strata .file-view,
+strata .browser-view,
+strata .standard-view,
+strata .content-view,
+strata listview,
+strata gridview,
+strata columnview {
+    background-color: #0E0E0E;
+    border-radius: 28px;
+    padding: 10px;
+}
+strata .file-view *:not(.rubberband),
+strata .browser-view *:not(.rubberband),
+strata .standard-view *:not(.rubberband) {
+    background-color: transparent;
+}
+strata .file-view:selected,
+strata .browser-view:selected,
+strata .standard-view:selected,
+strata listview:selected,
+strata gridview:selected,
+strata columnview:selected,
+strata .file-view *:selected,
+strata .browser-view *:selected,
+strata .standard-view *:selected {
+    background-color: #F2F2F2;
+    color: #000000;
+    border-radius: 14px;
+}
+/* In list/column view, don't round individual rows */
+strata listview:selected,
+strata listview *:selected,
+strata columnview:selected,
+strata columnview *:selected {
+    border-radius: 0;
+}
+
+/* Selection rubberband */
+strata .rubberband {
+    background-color: alpha(#F2F2F2, 0.08);
+    border: 1px solid alpha(#F2F2F2, 0.4);
+}
+
+/* Path bar / location entry */
+strata .path-bar,
+strata .location-entry,
+strata .path-bar-button,
+strata .breadcrumb {
+    font-family: "Space Mono";
+    font-size: 12px;
+    letter-spacing: 1px;
+    padding: 6px 14px;
+}
+strata .path-bar-button:checked,
+strata .breadcrumb:checked {
+    background-color: #F2F2F2;
+    color: #000000;
+    box-shadow: none;
+}
+
+/* Tabs / notebook */
+strata notebook header {
+    background: none;
+    box-shadow: none;
+    border: none;
+}
+strata notebook header tab {
+    border-radius: 999px;
+    padding: 4px 16px;
+    box-shadow: none;
+}
+strata notebook header tab:checked {
+    background-color: #F2F2F2;
+    color: #000000;
+}
+
+/* Status bar */
+strata statusbar,
+strata .statusbar {
+    font-family: "Space Mono";
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: #8C8C8C;
+    padding: 6px 12px;
+}
+
+/* Preview pane */
+strata .preview,
+strata .preview-pane {
+    background-color: #0E0E0E;
+    border-radius: 28px;
+    padding: 10px;
+}
+
+/* Column view (Miller columns) */
+strata .column-view,
+strata columnview {
+    background-color: #000000;
+}
+strata .column-view .column,
+strata columnview .column {
+    background-color: #0E0E0E;
+    border-radius: 28px;
+    margin: 6px;
+    padding: 8px;
+}
+strata .column-view .column:selected,
+strata columnview .column:selected {
+    background-color: #F2F2F2;
+    color: #000000;
+}
+
+/* Search entry */
+strata .search-entry,
+strata .search-bar entry {
+    font-family: "Space Grotesk";
+    border-radius: 999px;
+    padding: 8px 16px;
+    background-color: #1A1A1A;
+    color: #F2F2F2;
+}
+strata .search-entry:focus,
+strata .search-bar entry:focus {
+    background-color: #0E0E0E;
+    box-shadow: 0 0 0 2px #D71921;
+}
+
+/* Context menu / popover */
+strata popover,
+strata menu {
+    background-color: #0E0E0E;
+    border-radius: 24px;
+    border: 1px solid #2A2A2A;
+}
+strata popover menuitem,
+strata menu menuitem {
+    border-radius: 12px;
+    padding: 8px 16px;
+}
+strata popover menuitem:hover,
+strata menu menuitem:hover {
+    background-color: #1A1A1A;
+}
+strata popover menuitem:selected,
+strata menu menuitem:selected {
+    background-color: #F2F2F2;
+    color: #000000;
+}
+
+/* Headerbar / toolbar */
+strata headerbar,
+strata .headerbar,
+strata toolbar {
+    background-color: #000000;
+    color: #F2F2F2;
+    border-bottom: 1px solid #2A2A2A;
+}
+strata headerbar button,
+strata .headerbar button,
+strata toolbar button {
+    border-radius: 999px;
+    padding: 6px 14px;
+}
+strata headerbar button:hover,
+strata .headerbar button:hover,
+strata toolbar button:hover {
+    background-color: #1A1A1A;
+}
+strata headerbar button:checked,
+strata .headerbar button:checked,
+strata toolbar button:checked {
+    background-color: #F2F2F2;
+    color: #000000;
+}
+
+/* Settings dialog */
+strata .settings,
+strata .preferences {
+    background-color: #0E0E0E;
+}
+strata .settings section,
+strata .preferences section {
+    background-color: #1A1A1A;
+    border-radius: 24px;
+    padding: 16px;
+}
+
+/* File properties dialog */
+strata .properties,
+strata .file-properties {
+    background-color: #0E0E0E;
+}
+
+/* Density - compact mode (handled by Strata's internal settings) */
+/* strata[compact] button,
+strata[compact] entry {
+    padding: 4px 12px;
+} */
+
+/* Focus styles */
+strata *:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #D71921;
+}
+
+/* Danger/destructive actions */
+strata .destructive,
+strata button.destructive {
+    background-color: #D71921;
+    color: #F2F2F2;
+}
+strata .destructive:hover,
+strata button.destructive:hover {
+    background-color: #E83A3A;
+}
+
+/* Accent buttons */
+strata .suggested-action,
+strata button.suggested-action {
+    background-color: #D71921;
+    color: #F2F2F2;
+}
+strata .suggested-action:hover,
+strata button.suggested-action:hover {
+    background-color: #E83A3A;
+}

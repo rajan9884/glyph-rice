@@ -148,8 +148,51 @@ Singleton {
     // adapter needs time after turning on
     Timer { id: btResumeT; interval: 1500; onTriggered: { for (const d of Bluetooth.devices.values) if (root.btResume.includes(d.address) && !d.connected) d.connect(); } }
 
-    // ---- caffeine: don't sleep. Inhibitor needs live window — invisible 0×0, like in demonshot ----
-    property bool caffeine: false
+    // ---- caffeine: don't sleep or lock. Persisted in Rules.store, inhibits hypridle and systemd ----
+    property bool caffeine: Rules.store.caffeine ?? false
+    property string caffeineCookie: ""
+    onCaffeineChanged: {
+        if (Rules.store.caffeine !== caffeine) {
+            Rules.store.caffeine = caffeine;
+            Rules.idle();
+        }
+        if (caffeine) {
+            caffeineInhibit.running = true;
+        } else {
+            caffeineUninhibit.running = true;
+        }
+    }
+    Connections {
+        target: Rules.store
+        function onCaffeineChanged() {
+            if (root.caffeine !== !!Rules.store.caffeine) root.caffeine = !!Rules.store.caffeine;
+        }
+    }
+    function toggleCaffeine() { caffeine = !caffeine; }
+
+    Process {
+        id: caffeineProc
+        running: root.caffeine
+        command: ["systemd-inhibit", "--what=idle:sleep:handle-lid-switch", "--who=caffeine", "--why=Caffeine active", "sleep", "infinity"]
+    }
+    Process {
+        id: caffeineInhibit
+        command: ["busctl", "--user", "call", "org.freedesktop.ScreenSaver", "/org/freedesktop/ScreenSaver", "org.freedesktop.ScreenSaver", "Inhibit", "ss", "caffeine", "active"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const m = text.match(/\bu\s+(\d+)/);
+                if (m) root.caffeineCookie = m[1];
+            }
+        }
+    }
+    Process {
+        id: caffeineUninhibit
+        command: ["sh", "-c", root.caffeineCookie ? `busctl --user call org.freedesktop.ScreenSaver /org/freedesktop/ScreenSaver org.freedesktop.ScreenSaver UnInhibit u ${root.caffeineCookie}` : "true"]
+        onExited: root.caffeineCookie = ""
+    }
+    Component.onCompleted: {
+        if (root.caffeine) caffeineInhibit.running = true;
+    }
     IdleInhibitor {
         enabled: root.caffeine
         window: PanelWindow {

@@ -1,0 +1,17 @@
+name = "Glyph Nothing"
+background = "#000000"
+surface = "#0E0E0E"
+text = "#F2F2F2"
+accent = "#D71921"
+danger = "#D71921"
+muted = "#1A1A1A"
+highlight = "#F2F2F2"
+border = "#2A2A2A"
+dim_text = "#8C8C8C"
+
+# Syntax highlighting colors (matching the Nothing OS vibe)
+syntax_keyword = "#D71921"
+syntax_string = "#7EE787"
+syntax_constant = "#FFD580"
+syntax_type = "#FFA657"
+syntax_preprocessor = "#D2A8FF"
