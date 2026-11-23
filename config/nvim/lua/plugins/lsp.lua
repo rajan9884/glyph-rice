@@ -1,4 +1,4 @@
--- Glyph: LSP — Language Server Protocol setup
+-- Glyph: LSP — Language Server Protocol setup (native vim.lsp.config API)
 
 return {
   "neovim/nvim-lspconfig",
@@ -10,7 +10,6 @@ return {
     "b0o/schemastore.nvim",
   },
   config = function()
-    local lspconfig = require("lspconfig")
     local cmp_nvim_lsp = require("cmp_nvim_lsp")
 
     -- Capabilities
@@ -56,12 +55,12 @@ return {
       vim.keymap.set("n", "]d", vim.diagnostic.goto_next, vim.tbl_extend("force", opts, { desc = "Next diagnostic" }))
 
       -- Inlay hints
-      if client.supports_method("textDocument/inlayHint") then
+      if client:supports_method("textDocument/inlayHint") then
         vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
       end
 
       -- Document highlight
-      if client.supports_method("textDocument/documentHighlight") then
+      if client:supports_method("textDocument/documentHighlight") then
         local group = vim.api.nvim_create_augroup("LspDocumentHighlight", { clear = false })
         vim.api.nvim_clear_autocmds({ group = group, buffer = bufnr })
         vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
@@ -102,15 +101,6 @@ return {
           },
         },
       },
-      rust_analyzer = {
-        settings = {
-          ["rust-analyzer"] = {
-            cargo = { allFeatures = true },
-            checkOnSave = { command = "clippy" },
-            procMacro = { enable = true },
-          },
-        },
-      },
       ts_ls = {
         settings = {
           typescript = { inlayHints = { includeInlayParameterNameHints = "all", includeInlayParameterNameHintsWhenArgumentMatchesName = false, includeInlayFunctionParameterTypeHints = true, includeInlayVariableTypeHints = true, includeInlayPropertyDeclarationTypeHints = true, includeInlayFunctionLikeReturnTypeHints = true, includeInlayEnumMemberValueHints = true } },
@@ -123,7 +113,6 @@ return {
       yamlls = {
         settings = { yaml = { schemas = require("schemastore").yaml.schemas(), keyOrdering = false } },
       },
-      taplo = {},
       dockerls = {},
       docker_compose_language_service = {},
       bashls = {},
@@ -137,8 +126,6 @@ return {
       gopls = {
         settings = { gopls = { analyses = { unusedparams = true }, staticcheck = true, gofumpt = true } },
       },
-      zls = {},
-      nil_ls = {},
       hyprls = {},
     }
 
@@ -151,17 +138,18 @@ return {
       },
     })
 
-    -- Setup mason-lspconfig
+    -- Setup mason-lspconfig (handles automatic installation)
     require("mason-lspconfig").setup({
       ensure_installed = vim.tbl_keys(servers),
       automatic_installation = true,
     })
 
-    -- Setup servers
+    -- Configure servers using native vim.lsp.config API (neovim 0.11+)
     for server, config in pairs(servers) do
       config.capabilities = capabilities
       config.on_attach = on_attach
-      lspconfig[server].setup(config)
+      vim.lsp.config(server, config)
+      vim.lsp.enable(server)
     end
 
     -- Additional LSP keymaps

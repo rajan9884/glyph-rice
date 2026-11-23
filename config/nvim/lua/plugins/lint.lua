@@ -19,7 +19,6 @@ return {
       dockerfile = { "hadolint" },
       sql = { "sqlfluff" },
       lua = { "luacheck" },
-      rust = { "clippy" },
       go = { "golangcilint" },
       c = { "cpplint" },
       cpp = { "cpplint" },

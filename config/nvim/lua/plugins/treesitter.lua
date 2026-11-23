@@ -9,12 +9,12 @@ return {
     "windwp/nvim-ts-autotag",
   },
   config = function()
-    require("nvim-treesitter.configs").setup({
+    require("nvim-treesitter").setup({
       ensure_installed = {
         "lua", "vim", "vimdoc", "query", "markdown", "markdown_inline",
-        "bash", "fish", "python", "javascript", "typescript", "tsx",
+        "bash", "python", "javascript", "typescript", "tsx",
         "json", "jsonc", "yaml", "toml", "html", "css", "scss",
-        "rust", "go", "c", "cpp", "zig", "ron", "dockerfile",
+        "go", "c", "cpp", "ron", "dockerfile",
         "gitignore", "gitcommit", "git_rebase", "git_config",
         "regex", "sql", "graphql", "protobuf",
       },

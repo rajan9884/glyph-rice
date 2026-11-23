@@ -5,6 +5,10 @@ return {
   event = { "BufReadPost", "BufNewFile" },
   main = "ibl",
   config = function()
+    -- Nothing OS colors for indent guides (must be defined BEFORE setup)
+    vim.api.nvim_set_hl(0, "IndentBlanklineChar", { fg = "#2A2A2A", nocombine = true })
+    vim.api.nvim_set_hl(0, "IndentBlanklineScopeChar", { fg = "#D71921", nocombine = true })
+
     require("ibl").setup({
       indent = {
         char = "│",
@@ -30,9 +34,5 @@ return {
         buftypes = { "terminal", "nofile", "quickfix", "prompt" },
       },
     })
-
-    -- Nothing OS colors for indent guides
-    vim.api.nvim_set_hl(0, "IndentBlanklineChar", { fg = "#2A2A2A", nocombine = true })
-    vim.api.nvim_set_hl(0, "IndentBlanklineScopeChar", { fg = "#D71921", nocombine = true })
   end,
 }
