@@ -1,4 +1,4 @@
-# glyph: монохром — серое растёт в белое, выбранный процесс белой плашкой. Красный только у перегрева. Фон — терминала
+# glyph: monochrome — gray ramps to white, selected process highlighted with white badge. Red only on overheat. Terminal background.
 theme[main_bg]=""
 theme[main_fg]="#F2F2F2"
 theme[title]="#F2F2F2"

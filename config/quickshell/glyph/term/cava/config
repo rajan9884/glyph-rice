@@ -20,8 +20,8 @@ bar_width = 1
 bar_spacing = 1
 
 [color]
-# glyph: одним цветом — текстом терминала (светлая тема kitty перекрасит сама), без градиента.
-# точек «●» терминальный cava не умеет — тонкие столбики с промежутками; точками рисует dots рядом
+# glyph: single color — terminal text color (kitty light theme recolors it automatically), without gradient.
+# terminal cava cannot do "●" dots — thin bars with gaps; dots script alongside renders with dots.
 foreground = default
 
 [smoothing]
