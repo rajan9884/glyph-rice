@@ -83,45 +83,40 @@ PanelWindow {
                 Repeater {
                     model: root.count
 
-                    Item {
+                    Rectangle {
                         id: wsBtn
                         required property int index
                         readonly property int n: index + 1
                         readonly property bool occ: (Hyprland.workspaces.values.find(w => w.id === n)?.toplevels.values.length ?? 0) > 0
                         readonly property bool on: root.active === n
 
-                        width: 22
-                        height: 26
+                        width: 24
+                        height: 24
+                        radius: 12
+                        color: on ? Theme.s2 : "transparent"
+                        border {
+                            width: on ? 1 : 0
+                            color: on ? Theme.fg : "transparent"
+                        }
 
-                        // number
+                        Behavior on color { ColorAnimation { duration: Theme.t } }
+                        Behavior on border.color { ColorAnimation { duration: Theme.t } }
+
                         Text {
-                            id: wsNum
-                            anchors.top: parent.top
-                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.centerIn: parent
                             text: wsBtn.n
                             font {
                                 family: Theme.mono
-                                pixelSize: 12
+                                pixelSize: 11
                                 weight: wsBtn.on || wsBtn.occ ? Font.Bold : Font.Normal
                             }
                             color: wsBtn.on ? Theme.fg : wsBtn.occ ? Theme.grey : Theme.s3
                             Behavior on color { ColorAnimation { duration: Theme.t } }
                         }
 
-                        // solid dot under number for active workspace
-                        Rectangle {
-                            visible: wsBtn.on
-                            anchors.bottom: parent.bottom
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            width: 4
-                            height: 4
-                            radius: 2
-                            color: Theme.fg
-                        }
-
                         MouseArea {
                             anchors.fill: parent
-                            anchors.margins: -4
+                            anchors.margins: -3
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.go(wsBtn.n)
                         }
