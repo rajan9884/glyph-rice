@@ -31,8 +31,8 @@ PanelWindow {
     WlrLayershell.namespace: "glyph-bar"
 
     readonly property int active: Hyprland.focusedWorkspace?.id ?? 0
-    // six dots, more — if busy or far one open
-    readonly property int count: Math.min(10, Math.max(6, active, ...Hyprland.workspaces.values.filter(w => w.toplevels.values.length).map(w => w.id)))
+    // four numbers, more — if busy or far one open
+    readonly property int count: Math.min(10, Math.max(4, active, ...Hyprland.workspaces.values.filter(w => w.toplevels.values.length).map(w => w.id)))
     readonly property var top: ToplevelManager.activeToplevel
     readonly property var bat: UPower.displayDevice
     readonly property var wifi: Networking.devices.values.find(d => d.type === DeviceType.Wifi) ?? null
@@ -73,29 +73,58 @@ PanelWindow {
                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.markClicked() }
             }
 
-            // workspaces: current pulled into white pill, busy gray, empty — line
+            // workspaces: numbers tracking workspaces; bright when occupied, normal when unused
             Pile {
                 id: ws
                 x: root.vert ? (parent.width - width) / 2 : mark.x + mark.width + 24
                 y: root.vert ? mark.y + mark.height + 24 : (parent.height - height) / 2
-                spacing: 8
+                spacing: 4
 
                 Repeater {
                     model: root.count
 
-                    Rectangle {
+                    Item {
+                        id: wsBtn
                         required property int index
                         readonly property int n: index + 1
                         readonly property bool occ: (Hyprland.workspaces.values.find(w => w.id === n)?.toplevels.values.length ?? 0) > 0
                         readonly property bool on: root.active === n
-                        property real len: on ? 28 : 8
-                        width: root.vert ? 8 : len
-                        height: root.vert ? len : 8
-                        radius: 4
-                        color: on ? Theme.fg : occ ? Theme.grey : Theme.s3
-                        Behavior on len { NumberAnimation { duration: Theme.t; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.glide } }
-                        Behavior on color { ColorAnimation { duration: Theme.t } }
-                        MouseArea { anchors.fill: parent; anchors.margins: -6; onClicked: root.go(parent.n) }
+
+                        width: 22
+                        height: 26
+
+                        // number
+                        Text {
+                            id: wsNum
+                            anchors.top: parent.top
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: wsBtn.n
+                            font {
+                                family: Theme.mono
+                                pixelSize: 12
+                                weight: wsBtn.on || wsBtn.occ ? Font.Bold : Font.Normal
+                            }
+                            color: wsBtn.on ? Theme.fg : wsBtn.occ ? Theme.grey : Theme.s3
+                            Behavior on color { ColorAnimation { duration: Theme.t } }
+                        }
+
+                        // solid dot under number for active workspace
+                        Rectangle {
+                            visible: wsBtn.on
+                            anchors.bottom: parent.bottom
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: 4
+                            height: 4
+                            radius: 2
+                            color: Theme.fg
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            anchors.margins: -4
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.go(wsBtn.n)
+                        }
                     }
                 }
             }

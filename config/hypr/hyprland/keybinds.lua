@@ -121,7 +121,9 @@ hl.bind("CTRL + SUPER + SHIFT + up", hl.dsp.window.move({ workspace = "special:s
 hl.bind("CTRL + SUPER + SHIFT + down", hl.dsp.window.move({ workspace = "e+0" }))
 hl.bind("SUPER + ALT + S", hl.dsp.window.move({ workspace = "special:special" }))
 
--- Window groups
+-- Window groups & app cycling
+hl.bind("SUPER + Tab", fn.cycle_windows(false), { repeating = true, description = "Cycle open apps" })
+hl.bind("SUPER + SHIFT + Tab", fn.cycle_windows(true), { repeating = true, description = "Cycle open apps (backward)" })
 hl.bind(vars.kbWindowGroupCycleNext, hl.dsp.window.cycle_next(), { repeating = true })
 hl.bind(vars.kbWindowGroupCyclePrev, hl.dsp.window.cycle_next({ next = false }), { repeating = true })
 hl.bind("CTRL + ALT + Tab", hl.dsp.group.next(), { repeating = true })
@@ -207,6 +209,7 @@ hl.bind("CTRL + ALT + V", hl.dsp.exec_cmd(vars.audioSettings))
 -- Utilities
 hl.bind("Print", hl.dsp.global("shell:shot"))
 hl.bind("SUPER + SHIFT + S", hl.dsp.global("shell:shot"))
+hl.bind("SUPER + CTRL + Print", hl.dsp.exec_cmd("ocr-extract"), { description = "OCR text extraction" })
 hl.bind("SUPER + ALT + R",       hl.dsp.global("shell:rec"),       { description = "Record screen + audio (toggle)" })
 hl.bind("CTRL + ALT + R",        hl.dsp.global("shell:recSilent"), { description = "Record screen, no audio (toggle)" })
 hl.bind("SUPER + SHIFT + ALT + R", hl.dsp.global("shell:recRegion"), { description = "Record region, no audio (toggle)" })

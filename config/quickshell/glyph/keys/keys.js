@@ -43,6 +43,7 @@ var KEYBINDINGS = [
     { cat: "windows", desc: "Center & Resize (55x70)", keys: ["CTRL", "SUPER", "ALT", "\\"], detail: "Resize to 55%x70% and center" },
     { cat: "windows", desc: "Picture-in-Picture", keys: ["SUPER", "ALT", "\\"], detail: "Float, pin and snap to bottom corner" },
     { cat: "windows", desc: "Pin Window on Top", keys: ["SUPER", "SHIFT", "P"], detail: "Sticky window visible across workspaces" },
+    { cat: "windows", desc: "Cycle Open Apps", keys: ["SUPER", "Tab"], detail: "Cycle across open apps (Shift for prev)" },
     { cat: "windows", desc: "Cycle Active Windows", keys: ["ALT", "Tab"], detail: "Cycle next window (Shift for prev)" },
     { cat: "windows", desc: "Group / Tab Window", keys: ["SUPER", ","], detail: "Add window into tabbed group" },
     { cat: "windows", desc: "Ungroup Window", keys: ["SUPER", "U"], detail: "Pull window out of tabbed group" },
@@ -65,6 +66,7 @@ var KEYBINDINGS = [
 
     // Media & System
     { cat: "media & sys", desc: "Screenshot Region", keys: ["Print"], detail: "Also Super + Shift + S" },
+    { cat: "media & sys", desc: "OCR Text Extraction", keys: ["SUPER", "CTRL", "Print"], detail: "Select region, copy recognized text to clipboard" },
     { cat: "media & sys", desc: "Record Screen (Audio+Video)", keys: ["SUPER", "ALT", "R"], detail: "gpu-screen-recorder with audio" },
     { cat: "media & sys", desc: "Record Screen (Silent)", keys: ["CTRL", "ALT", "R"], detail: "gpu-screen-recorder video capture" },
     { cat: "media & sys", desc: "Record Region", keys: ["SUPER", "SHIFT", "ALT", "R"], detail: "gpu-screen-recorder selected box" },

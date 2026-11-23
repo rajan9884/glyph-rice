@@ -104,6 +104,61 @@ local function record(region, sound)
     end
 end
 
+-- Cycle focus between open (occupied) application windows across workspaces
+local function cycle_windows(reverse)
+    return function()
+        local windows = hl.get_windows()
+        if not windows or #windows == 0 then return end
+
+        local normal_wins = {}
+        for _, w in ipairs(windows) do
+            if w.workspace and w.workspace.id and w.workspace.id > 0 and w.mapped ~= false and not w.hidden then
+                table.insert(normal_wins, w)
+            end
+        end
+
+        if #normal_wins == 0 then return end
+        if #normal_wins == 1 then
+            hl.dispatch(hl.dsp.focus({ window = "address:" .. normal_wins[1].address }))
+            return
+        end
+
+        table.sort(normal_wins, function(a, b)
+            if a.workspace.id ~= b.workspace.id then
+                return a.workspace.id < b.workspace.id
+            end
+            return a.address < b.address
+        end)
+
+        local active = hl.get_active_window()
+        local current_idx = nil
+        if active then
+            for idx, w in ipairs(normal_wins) do
+                if w.address == active.address then
+                    current_idx = idx
+                    break
+                end
+            end
+        end
+
+        local next_idx = 1
+        if current_idx then
+            if reverse then
+                next_idx = current_idx - 1
+                if next_idx < 1 then next_idx = #normal_wins end
+            else
+                next_idx = current_idx + 1
+                if next_idx > #normal_wins then next_idx = 1 end
+            end
+        else
+            next_idx = reverse and #normal_wins or 1
+        end
+
+        local target = normal_wins[next_idx]
+        hl.dispatch(hl.dsp.focus({ window = "address:" .. target.address }))
+    end
+end
+
 -- Toggle active window between tiling and centered floating
 local function toggle_floating_centered()
     local win = hl.get_active_window()
@@ -128,6 +183,7 @@ end
 return {
     toggle_special           = toggle_special,
     record                   = record,
+    cycle_windows            = cycle_windows,
     resizer                  = resizer,
     resize_by_screen         = resize_by_screen,
     resize_active_window     = resize_active_window,
