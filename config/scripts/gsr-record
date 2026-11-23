@@ -18,6 +18,7 @@ done
 
 # If already recording, stop it
 if pkill -INT -f "^gpu-screen-recorder "; then
+    notify-send -a "recorder" -i video-x-generic "Recording saved" "Saved to $(xdg-user-dir VIDEOS)"
     exit 0
 fi
 
@@ -45,4 +46,5 @@ OUTDIR=$(xdg-user-dir VIDEOS)
 mkdir -p "$OUTDIR"
 OUTFILE="$OUTDIR/rec-$(date +%F_%H-%M-%S).mp4"
 
+notify-send -a "recorder" -i video-x-generic "Recording started" "Screen recording in progress"
 exec env LIBVA_DRIVER_NAME=iHD gpu-screen-recorder $W_ARGS $A_ARGS -o "$OUTFILE"

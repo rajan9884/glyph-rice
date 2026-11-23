@@ -85,7 +85,7 @@ Singleton {
     // LIBVA_DRIVER_NAME=iHD required for Intel Iris Xe hardware h264 encoding (intel-media-driver)
     function toggleRec() {
         const w = Theme.state.recArea ? `-w region -region "$(slurp -f %wx%h+%x+%y)"` : `-w ${Hyprland.focusedMonitor?.name ?? "screen"}`;
-        sh(`pkill -INT -f '^gpu-screen-recorder' || exec env LIBVA_DRIVER_NAME=iHD gpu-screen-recorder ${w} ${recArgs()} -o "$(xdg-user-dir VIDEOS)/rec-$(date +%F_%H-%M-%S).mp4"`);
+        sh(`if pkill -INT -f '^gpu-screen-recorder'; then notify-send -a "recorder" -i video-x-generic "Recording saved" "Saved to $(xdg-user-dir VIDEOS)"; else notify-send -a "recorder" -i video-x-generic "Recording started" "Screen recording in progress"; exec env LIBVA_DRIVER_NAME=iHD gpu-screen-recorder ${w} ${recArgs()} -o "$(xdg-user-dir VIDEOS)/rec-$(date +%F_%H-%M-%S).mp4"; fi`);
         rec = !rec;
     }
     function toggleNight() { Rules.store.night = !night; Rules.night(); }

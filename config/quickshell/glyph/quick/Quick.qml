@@ -261,21 +261,13 @@ PanelWindow {
                                     height: modes.height
                                     Row {
                                         anchors.centerIn: parent
-                                        spacing: 10
-                                        Row {
+                                        spacing: 8
+                                        Icon {
                                             anchors.verticalCenter: parent.verticalCenter
-                                            spacing: 3
-                                            Repeater {
-                                                model: 4
-                                                Rectangle {
-                                                    required property int index
-                                                    anchors.bottom: parent.bottom
-                                                    width: 4
-                                                    height: 6 + index * 4
-                                                    radius: 2
-                                                    color: index <= mc.index ? (mc.on ? Theme.ink : Theme.fg) : (mc.on ? Theme.mute : Theme.s3)
-                                                }
-                                            }
+                                            readonly property var modeIcons: ["\u{F04C6}", "\u{F04C6}", "\u{F04C7}", "\u{F04C5}"]
+                                            text: modeIcons[mc.index] ?? "\u{F04C5}"
+                                            font.pixelSize: 16
+                                            color: mc.on ? Theme.ink : Theme.fg
                                         }
                                         Lb { anchors.verticalCenter: parent.verticalCenter; text: Rules.modes[mc.index].short; color: mc.on ? Theme.ink : Theme.grey }
                                     }

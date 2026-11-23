@@ -259,30 +259,21 @@ PanelWindow {
             Lb { id: full; visible: false; text: "100"; px: 10 }
         }
     }
-    // power mode notches (Rules.modes): ultra — one, performance — all; click — next,
+    // power mode speedometer (Rules.modes): ultra — slow, saver — slow, balanced — medium, performance — fast; click — next,
     // hover (and on battery) — card with choice
     Component {
         id: modeC
-        Item {
-            id: ticks
-            width: 40
-            height: 22
-            Row {
-                anchors.centerIn: parent
-                spacing: 2
-                Repeater {
-                    model: Rules.modeCount
-                    Rectangle {
-                        required property int index
-                        anchors.bottom: parent.bottom
-                        width: 3
-                        height: 5 + index * 3
-                        radius: 1.5
-                        color: index <= Rules.mode ? Theme.fg : Theme.s3
-                    }
-                }
+        Icon {
+            id: spd
+            readonly property var modeIcons: ["\u{F04C6}", "\u{F04C6}", "\u{F04C7}", "\u{F04C5}"]
+            text: modeIcons[Rules.mode] ?? "\u{F04C5}"
+            color: spdHov.hovered ? Theme.fg : (Rules.mode === 3 ? Theme.accent : Rules.mode === 2 ? Theme.fg : Theme.grey)
+            HoverHandler {
+                id: spdHov
+                cursorShape: Qt.PointingHandCursor
+                onHoveredChanged: { root.tickHot = hovered; root.peek(spd); }
+                Component.onDestruction: root.tickHot = false
             }
-            HoverHandler { cursorShape: Qt.PointingHandCursor; onHoveredChanged: { root.tickHot = hovered; root.peek(ticks); } Component.onDestruction: root.tickHot = false }
             TapHandler { onTapped: Rules.setMode((Rules.mode + 1) % Rules.modeCount) }
         }
     }
@@ -379,21 +370,12 @@ PanelWindow {
                                     radius: 40
                                     color: mo.on ? Theme.fg : moHov.hovered ? Theme.s3 : Theme.s2
                                     Behavior on color { ColorAnimation { duration: Theme.t } }
-                                    // notches: how many lit — such strength
-                                    Row {
+                                    Icon {
                                         anchors.centerIn: parent
-                                        spacing: 4
-                                        Repeater {
-                                            model: 4
-                                            Rectangle {
-                                                required property int index
-                                                anchors.bottom: parent.bottom
-                                                width: 5
-                                                height: 8 + index * 6
-                                                radius: 2.5
-                                                color: index <= mo.index ? (mo.on ? Theme.ink : Theme.fg) : (mo.on ? Theme.mute : Theme.s3)
-                                            }
-                                        }
+                                        readonly property var modeIcons: ["\u{F04C6}", "\u{F04C6}", "\u{F04C7}", "\u{F04C5}"]
+                                        text: modeIcons[mo.index] ?? "\u{F04C5}"
+                                        font.pixelSize: 28
+                                        color: mo.on ? Theme.ink : Theme.fg
                                     }
                                     HoverHandler {
                                         id: moHov

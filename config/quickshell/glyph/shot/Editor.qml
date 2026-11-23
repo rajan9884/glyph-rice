@@ -51,7 +51,7 @@ Scope {
         // ponytail: snapshot overwritten; original beside it — if want to roll back edits
         canvas.grabToImage(r => {
             if (!r.saveToFile(root.shot)) return;
-            Quickshell.execDetached(["sh", "-c", 'wl-copy -t image/png < "$1"', "sh", root.shot]);
+            Quickshell.execDetached(["sh", "-c", 'wl-copy -t image/png < "$1" && notify-send -a "screenshot" -i "$1" "Screenshot saved" "Edits saved and copied to clipboard"', "sh", root.shot]);
             root.close();
         }, Qt.size(img.implicitWidth, img.implicitHeight));
     }

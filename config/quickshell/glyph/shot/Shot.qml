@@ -74,7 +74,9 @@ Scope {
         const crop = `${cx} ${cy} ${Math.min(Math.round(r.width * k), frozenImg.sourceSize.width - cx)} ${Math.min(Math.round(r.height * k), frozenImg.sourceSize.height - cy)}`;
         take.exec(["sh", "-c", `d="$(xdg-user-dir PICTURES)/shots"; mkdir -p "$d"; f="$d/shot-$(date +%F_%H-%M-%S).png"
             if [ "$1" = 0 ]; then vips crop "$4" "$f[compression=1]" $2 2>/dev/null; else sleep "$1"; grim -g "$3" "$f"; fi \
-                && wl-copy -t image/png < "$f" && printf '%s' "$f"`,
+                && wl-copy -t image/png < "$f" \
+                && notify-send -a "screenshot" -i "$f" "Screenshot taken" "Saved to $(basename "$f") and copied to clipboard" \
+                && printf '%s' "$f"`,
             "sh", String(delays[delay]), crop, `${x},${y} ${w}x${h}`, frozen]);
     }
 
