@@ -1,15 +1,9 @@
 # .zshrc - Ported shell config (Void-specific aliases removed)
 
-# Environment
-export USER="${USER:-$(id -un)}"
-export HOME="${HOME:-$(getent passwd "$USER" 2>/dev/null | cut -d: -f6)}"
-[ -z "$HOME" ] && export HOME="/home/$USER"
-export PATH="$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/sbin:/sbin:/bin"
-export EDITOR="nvim"
-export SUDO_EDITOR="nvim"
-export VISUAL="nvim"
-export BROWSER="helium-browser"
-export BAT_THEME="ansi"
+# Shared environment
+if [ -f "$HOME/.config/shell/env.sh" ]; then
+  source "$HOME/.config/shell/env.sh"
+fi
 
 # If not running interactively, return early
 [[ $- != *i* ]] && return
@@ -21,9 +15,9 @@ elif [ -f "$HOME/.config/shell/aliases" ]; then
   source "$HOME/.config/shell/aliases"
 fi
 
-# Also source ~/.bashrc if present (for any custom aliases defined in bashrc)
-if [ -f "$HOME/.bashrc" ]; then
-  source "$HOME/.bashrc"
+# Dual-GitHub helpers if present
+if [ -f "$HOME/.config/shell/git-accounts.sh" ]; then
+  source "$HOME/.config/shell/git-accounts.sh"
 fi
 
 # Starship Prompt
@@ -53,16 +47,7 @@ fcs() {
 # Monochrome eza
 export EZA_COLORS="uu=bright-black:gu=bright-black:da=bright-black:ur=white:uw=bright-black:ux=white:ue=bright-black:gr=bright-black:gw=bright-black:gx=white:tr=bright-black:fi=white:di=bright-white:ln=bright-black:pi=bright-black:so=bright-black:bd=bright-black:cd=bright-black:or=bright-black:mi=bright-black:ex=white"
 
-# Dual-GitHub helpers if present
-[ -f "$HOME/.config/shell/git-accounts.sh" ] && source "$HOME/.config/shell/git-accounts.sh"
-
-# FZF Environment & Key Bindings
-if command -v fd >/dev/null 2>&1; then
-  export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow --exclude .git"
-  export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-  export FZF_ALT_C_COMMAND="fd --type d --hidden --follow --exclude .git"
-fi
-
+# FZF key bindings & completion (Zsh)
 [ -f /usr/share/fzf/key-bindings.zsh ] && source /usr/share/fzf/key-bindings.zsh
 [ -f /usr/share/fzf/completion.zsh ] && source /usr/share/fzf/completion.zsh
 
@@ -82,6 +67,9 @@ y() {
 command -v fastfetch >/dev/null 2>&1 && fastfetch
 
 # Completion
+if [ -d /usr/share/zsh/site-functions ]; then
+  fpath=(/usr/share/zsh/site-functions $fpath)
+fi
 autoload -Uz compinit
 compinit
 
@@ -93,8 +81,6 @@ zstyle ':completion:*' list-colors \
   '=(#b)*(=2)=38;5;245' \
   '=(#b)*(=3)=38;5;240'
 
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
-
 # History
 HISTFILE="$HOME/.zsh_history"
 HISTSIZE=100000
@@ -105,6 +91,17 @@ setopt HIST_IGNORE_ALL_DUPS
 setopt HIST_FIND_NO_DUPS
 setopt HIST_SAVE_NO_DUPS
 
+# Zsh Autosuggestions
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
+for p in /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh \
+         /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh; do
+  if [ -f "$p" ]; then
+    source "$p"
+    break
+  fi
+done
+
+# Zsh Syntax Highlighting (must be loaded after compinit and autosuggestions)
 typeset -A ZSH_HIGHLIGHT_STYLES
 ZSH_HIGHLIGHT_STYLES[command]='fg=white'
 ZSH_HIGHLIGHT_STYLES[builtin]='fg=white'
@@ -114,8 +111,13 @@ ZSH_HIGHLIGHT_STYLES[path]='fg=245'
 ZSH_HIGHLIGHT_STYLES[comment]='fg=240'
 ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=245'
 
-[ -f /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ] && source /usr/share/zsh/plugins/zsh-autosuggestions.zsh
-[ -f /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ] && source /usr/share/zsh/plugins/zsh-syntax-highlighting.zsh
+for p in /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh \
+         /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh; do
+  if [ -f "$p" ]; then
+    source "$p"
+    break
+  fi
+done
 
 function fe() {
   local file
@@ -139,6 +141,3 @@ if command -v zoxide >/dev/null 2>&1; then
   alias z=cd
   alias zi=cdi
 fi
-
-# kilo
-export PATH="$HOME/.kilo/bin:$PATH"

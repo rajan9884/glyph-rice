@@ -36,7 +36,7 @@ Black, white dots, one red. A sibling of [Demon's Shot](https://github.com/Nebel
 | **Style** | where the colour comes from, like caelestia: Nothing (black, white, red), the wallpaper (one of its tones through a Material You variant — monochrome, neutral, tonal spot, rainbow, content, fidelity, fruit salad, expressive, vibrant) or a palette — Catppuccin, Rosé Pine, Gruvbox, Nord, Dracula, Tokyo Night, Everforest, Kanagawa. Shell, Hyprland and kitty follow at once, GTK and Qt apps when they next start | launcher → style, Prefs → Style (a live mock-up of the desktop shows the palette under the cursor before you pick it) |
 | **Rice** | shell switcher, if Demon's Shot is installed too | `rice switch <name>` |
 
-Also: Hyprland (Lua), hypridle, kitty, fish, starship, fastfetch, btop, cava (dots in fish; `command cava` for bars), GTK, Qt and folder colours.
+Also: Hyprland (Lua), hypridle, kitty, zsh, starship, fastfetch, btop, cava (dots in zsh; `command cava` for bars), GTK, Qt and folder colours.
 
 <div align="center"><img src="assets/divider-glyph.svg" width="720" alt=""></div>
 
@@ -74,7 +74,7 @@ Weather (home, deck, lock) comes from open-meteo; the place is looked up by your
 | `quickshell/rice/` | `~/.config/quickshell/rice`, `~/.local/bin/rice` |
 | `quickshell/glyph/term/` | `starship.toml` `fastfetch/` `btop/` `cava/` `gtk-*/gtk.css` `qtengine.colors` in `~/.config` (with a Style colour — copies in `~/.local/state/rice/glyph`; edit `term/`) |
 | `kitty/` `qtengine/` | `~/.config/…` |
-| `fish/` | `~/.config/fish` |
+| `shell/` `git/` `scripts/` | `~/.zshrc`, `~/.config/shell`, `~/.gitconfig`, `~/.local/bin` |
 | `fonts/` | `~/.local/share/fonts/glyph` |
 | `sddm/glyph/` | copied to `/usr/share/sddm/themes/glyph` (the `sddm` user can't read your home), set in `/etc/sddm.conf.d/zz-glyph.conf`; to undo, delete both |
 
@@ -103,7 +103,7 @@ hl.bind("SUPER + G", hl.dsp.global("shell:game"))  -- game mode has no key by de
 | **Shell** | `quickshell` 0.3.1+ (Qt 6.9+) · `hyprland` 0.56+ · `hypridle` · `hyprsunset` · `xdg-desktop-portal-hyprland` · `jq` · `curl` · `python3` · `libqalculate` |
 | **System** | `sddm` 0.21+ (Qt 6 greeter) · `networkmanager` · `bluez` · `blueman` (Bluetooth pairing agent) · `pipewire` · `pipewire-pulse` · `pipewire-alsa` · `wireplumber` · `upower` · `power-profiles-daemon` · `brightnessctl` · `libnotify` · `playerctl` · `polkit-gnome` · `gnome-keyring` · `geoclue` |
 | **Capture** | `grim` · `slurp` · `imagemagick` · `libvips` · `gpu-screen-recorder` · `cliphist` · `wl-clipboard` |
-| **Terminal** | `kitty` · `fish` · `starship` · `fastfetch` · `btop` · `cava` · `eza` · `zoxide` · `direnv` |
+| **Terminal** | `kitty` · `zsh` · `starship` · `fastfetch` · `btop` · `cava` · `eza` · `zoxide` · `direnv` |
 | **Look** | `papirus-icon-theme` · `adw-gtk-theme` · JetBrains Mono Nerd Font · `noto-fonts-emoji` (Emoji 17) · `noto-fonts-cjk` · Bibata · `qtengine` · `darkly` |
 | **Optional** | `clash-verge-rev` · `nvidia-utils` · `ydotool` · `hyprpicker` · `swappy` · `trash-cli` |
 

@@ -1,0 +1,48 @@
+[mgr]
+ratio = [1, 3, 4]
+sort_by = "natural"
+sort_dir_first = true
+linemode = "size"
+show_hidden = true
+show_symlink = true
+
+[opener]
+edit = [
+	{ run = '${EDITOR:-nvim} %s', desc = "$EDITOR", block = true, for = "unix" },
+]
+play = [
+	{ run = 'mpv --force-window %s', desc = "Play", orphan = true, for = "unix" },
+	{ run = 'xdg-open %s1', desc = "Open", orphan = true, for = "linux" },
+]
+image = [
+	{ run = 'imv %s', desc = "View", orphan = true, for = "unix" },
+	{ run = 'xdg-open %s1', desc = "Open", orphan = true, for = "linux" },
+]
+open = [
+	{ run = 'xdg-open %s1', desc = "Open", for = "linux" },
+]
+
+[open]
+rules = [
+	{ url = "*/", use = [ "edit", "open" ] },
+	{ mime = "text/*", use = [ "edit", "open" ] },
+	{ mime = "image/*", use = [ "image", "open" ] },
+	{ mime = "{audio,video}/*", use = [ "play", "open" ] },
+	{ mime = "application/ogg", use = [ "play", "open" ] },
+	{ mime = "application/*zip", use = [ "open" ] },
+	{ mime = "application/x-tar", use = [ "open" ] },
+	{ mime = "application/x-bzip*", use = [ "open" ] },
+	{ mime = "application/x-7z-compressed", use = [ "open" ] },
+	{ mime = "application/x-rar", use = [ "open" ] },
+	{ mime = "application/xz", use = [ "open" ] },
+	{ mime = "application/pdf", use = [ "open" ] },
+	{ url = "*", use = [ "open" ] },
+]
+
+[plugin]
+prepend_preloaders = [
+	{ mime = "video/*", run = "video" },
+]
+prepend_previewers = [
+	{ mime = "video/*", run = "video" },
+]

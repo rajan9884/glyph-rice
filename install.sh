@@ -21,7 +21,7 @@ PACMAN=(
     brightnessctl playerctl wl-clipboard cliphist grim slurp swappy imagemagick libvips libqalculate
     gpu-screen-recorder ydotool libnotify trash-cli
     # терминал и консоль
-    kitty fish starship fastfetch btop cava eza zoxide direnv
+    kitty zsh zsh-autosuggestions zsh-syntax-highlighting zsh-completions fzf bat fd ripgrep gum tesseract tesseract-data-eng starship fastfetch btop cava eza zoxide direnv lazygit yazi tmux neovim
     # приложения из variables.lua
     thunar pavucontrol
     # шрифты (cjk — каомодзи в Charms), иконки (Papirus-Dark — основа темы папок Rice), тёмная база для gtk.css
@@ -56,9 +56,31 @@ LINKS=(
     "$G/term/cava                               .config/cava"
     "$G/term/gtk-3.0/gtk.css                    .config/gtk-3.0/gtk.css"
     "$G/term/gtk-4.0/gtk.css                    .config/gtk-4.0/gtk.css"
-    "config/fish/config.fish                    .config/fish/config.fish"
-    "config/fish/functions/fish_greeting.fish   .config/fish/functions/fish_greeting.fish"
     "config/fonts                               .local/share/fonts/glyph"
+    # шелл и конфиги
+    "config/shell/zshrc                         .zshrc"
+    "config/shell/zprofile                      .zprofile"
+    "config/shell/bashrc                        .bashrc"
+    "config/shell/aliases                       .bash_aliases"
+    "config/shell/aliases                       .config/shell/aliases"
+    "config/shell/env.sh                        .config/shell/env.sh"
+    "config/shell/git-accounts.sh               .config/shell/git-accounts.sh"
+    # git
+    "config/git/gitconfig                       .gitconfig"
+    "config/git/gitconfig-personal              .gitconfig-personal"
+    "config/git/gitconfig-work                  .gitconfig-work"
+    # инструменты и скрипты
+    "config/lazygit                             .config/lazygit"
+    "config/yazi                                .config/yazi"
+    "config/scripts/fcs                         .local/bin/fcs"
+    "config/scripts/ff                          .local/bin/ff"
+    "config/scripts/ffd                         .local/bin/ffd"
+    "config/scripts/git-switch-account          .local/bin/git-switch-account"
+    "config/scripts/git-use-personal            .local/bin/git-use-personal"
+    "config/scripts/git-use-work                .local/bin/git-use-work"
+    "config/scripts/git-whoami                  .local/bin/git-whoami"
+    "config/scripts/ocr-extract                 .local/bin/ocr-extract"
+    "config/scripts/ttfx                        .local/bin/ttfx"
 )
 
 say() { printf '\e[38;2;215;25;33m●\e[0m %s\n' "$*"; }
@@ -134,6 +156,33 @@ links() {
     echo glyph > "${XDG_STATE_HOME:-$HOME/.local/state}/rice/shell"
     mkdir -p "$HOME/Pictures/Wallpapers" # пикер обоев (Super+Shift+W) смотрит сюда
     fc-cache -f >/dev/null
+
+    # ssh config для dual-account github
+    mkdir -p "$HOME/.ssh"
+    if ! grep -q "Host github.com-personal" "$HOME/.ssh/config" 2>/dev/null; then
+        cat <<'SSH_SNIP' >> "$HOME/.ssh/config"
+
+# Personal Account
+Host github.com-personal
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_ed25519_personal
+
+# Work Account
+Host github.com-work
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_ed25519_work
+SSH_SNIP
+    fi
+    chmod 700 "$HOME/.ssh" 2>/dev/null || true
+    chmod 600 "$HOME/.ssh/config" 2>/dev/null || true
+
+    # переключение дефолтного шелла на zsh
+    if command -v zsh >/dev/null 2>&1 && [ "${SHELL:-}" != "$(command -v zsh)" ]; then
+        chsh -s "$(command -v zsh)" 2>/dev/null || sudo chsh -s "$(command -v zsh)" "$USER" 2>/dev/null || true
+    fi
+
     command -v gsettings >/dev/null || return 0 # --links на системе без GNOME-схем
     # тёмный режим для Zen, Electron и libadwaita (через портал) и тёмная gtk3-база под наш gtk.css
     gsettings set org.gnome.desktop.interface color-scheme prefer-dark

@@ -75,8 +75,8 @@ stop() {
 case $1 in
     "") echo "$cur" ;;
     list) for f in "$q"/*/rice.json; do basename "$(dirname "$f")"; done ;;
-    start) [ -n "$(pids "$cur")" ] && exit 0; mkdir -p "$state"; term "$cur"; exec env TZ=Asia/Kolkata qs -p "$q/$cur" -d ;;
-    restart) term "$cur"; stop "$cur"; hyprctl reload >/dev/null; exec env TZ=Asia/Kolkata qs -p "$q/$cur" -d ;; # reload removes stuck hypr error badge
+    start) [ -n "$(pids "$cur")" ] && exit 0; mkdir -p "$state"; term "$cur"; exec qs -p "$q/$cur" -d ;;
+    restart) term "$cur"; stop "$cur"; hyprctl reload >/dev/null; exec qs -p "$q/$cur" -d ;; # reload removes stuck hypr error badge
     kill) stop "$cur" ;;
     switch)
         [ -f "$q/$2/rice.json" ] || { echo "rice: no shell \"$2\"" >&2; exit 1; }
