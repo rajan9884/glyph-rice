@@ -146,6 +146,10 @@ ShellRoot {
     Shortcut { name: "menu"; description: "app launcher menu"; onPressed: launcher.toggle() }
     Shortcut { name: "keys"; description: "keybindings cheatsheet"; onPressed: keys.toggle() }
     Shortcut { name: "game"; description: "game mode"; onPressed: Rules.store.game = !Rules.store.game }
+    // screen recording shortcuts — keybinds call these so UI and keybinds share the same toggleRec() logic
+    Shortcut { name: "rec";       description: "record full screen + audio"; onPressed: { Theme.state.recArea = 0; Theme.state.recAudio = 1; Sys.toggleRec(); } }
+    Shortcut { name: "recSilent"; description: "record full screen, no audio"; onPressed: { Theme.state.recArea = 0; Theme.state.recAudio = 0; Sys.toggleRec(); } }
+    Shortcut { name: "recRegion"; description: "record region, no audio";     onPressed: { Theme.state.recArea = 1; Theme.state.recAudio = 0; Sys.toggleRec(); } }
 
     component Shortcut: GlobalShortcut { appid: "shell" }
 }

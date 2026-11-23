@@ -45,4 +45,4 @@ OUTDIR=$(xdg-user-dir VIDEOS)
 mkdir -p "$OUTDIR"
 OUTFILE="$OUTDIR/rec-$(date +%F_%H-%M-%S).mp4"
 
-exec gpu-screen-recorder $W_ARGS $A_ARGS -o "$OUTFILE"
+exec env LIBVA_DRIVER_NAME=iHD gpu-screen-recorder $W_ARGS $A_ARGS -o "$OUTFILE"

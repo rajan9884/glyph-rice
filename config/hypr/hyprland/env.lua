@@ -19,5 +19,8 @@ hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
 hl.env("XDG_SESSION_TYPE", "wayland")
 hl.env("XDG_SESSION_DESKTOP", "Hyprland")
 
+-- VA-API: Intel Iris Xe needs iHD driver (intel-media-driver package)
+hl.env("LIBVA_DRIVER_NAME", "iHD")
+
 -- Others
 hl.env("_JAVA_AWT_WM_NONREPARENTING", "1")

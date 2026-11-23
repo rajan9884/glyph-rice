@@ -82,9 +82,10 @@ Singleton {
         return `-f ${st.recFps} -q ${["medium", "high", "very_high", "ultra"][st.recQuality]} -cursor ${st.recCursor ? "yes" : "no"}` + (a ? ` -a "${a}"` : "");
     }
     // second time — stop. Area — slurp; cancelled selection — gsr won't start, rec will fix polling
+    // LIBVA_DRIVER_NAME=iHD required for Intel Iris Xe hardware h264 encoding (intel-media-driver)
     function toggleRec() {
         const w = Theme.state.recArea ? `-w region -region "$(slurp -f %wx%h+%x+%y)"` : `-w ${Hyprland.focusedMonitor?.name ?? "screen"}`;
-        sh(`pkill -INT -f '^gpu-screen-recorder' || exec gpu-screen-recorder ${w} ${recArgs()} -o "$(xdg-user-dir VIDEOS)/rec-$(date +%F_%H-%M-%S).mp4"`);
+        sh(`pkill -INT -f '^gpu-screen-recorder' || exec env LIBVA_DRIVER_NAME=iHD gpu-screen-recorder ${w} ${recArgs()} -o "$(xdg-user-dir VIDEOS)/rec-$(date +%F_%H-%M-%S).mp4"`);
         rec = !rec;
     }
     function toggleNight() { Rules.store.night = !night; Rules.night(); }
