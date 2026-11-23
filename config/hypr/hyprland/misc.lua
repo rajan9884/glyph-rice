@@ -17,8 +17,6 @@ hl.config({
         mouse_move_enables_dpms      = true,
         key_press_enables_dpms       = true,
 
-        dim_special                  = 0.0,   -- no dimming when special workspace (scratchpad) opens
-
         background_color             = "rgb(" .. scheme.void .. ")",
     },
 

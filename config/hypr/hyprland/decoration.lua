@@ -16,6 +16,8 @@ hl.config({
             passes            = vars.blurPasses,
         },
 
+        dim_special = 0.0,   -- no dimming when special workspace (scratchpad) opens
+
         shadow = {
             enabled      = vars.shadowEnabled,
             range        = vars.shadowRange,
