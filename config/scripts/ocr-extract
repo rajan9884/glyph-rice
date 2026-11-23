@@ -14,6 +14,8 @@ TESSERACT="$(command -v tesseract 2>/dev/null || command -v tesseract-ocr 2>/dev
 TMP_PNG="$(mktemp -t ocr-XXXXXX.png)"
 trap 'rm -f "$TMP_PNG"' EXIT
 
+notify-send -u low -a "ocr" "OCR" "Draw a region to extract text…"
+
 GEOM="$(slurp -d 2>/dev/null || true)"
 if [[ -z "$GEOM" ]]; then
     exit 0

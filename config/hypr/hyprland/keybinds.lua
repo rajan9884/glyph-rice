@@ -209,7 +209,7 @@ hl.bind("CTRL + ALT + V", hl.dsp.exec_cmd(vars.audioSettings))
 -- Utilities
 hl.bind("Print", hl.dsp.global("shell:shot"))
 hl.bind("SUPER + SHIFT + S", hl.dsp.global("shell:shot"))
-hl.bind("SUPER + CTRL + Print", hl.dsp.exec_cmd("ocr-extract"), { description = "OCR text extraction" })
+hl.bind("SUPER + CTRL + Print", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/ocr-extract"), { description = "OCR text extraction" })
 hl.bind("SUPER + ALT + R",       hl.dsp.global("shell:rec"),       { description = "Record screen + audio (toggle)" })
 hl.bind("CTRL + ALT + R",        hl.dsp.global("shell:recSilent"), { description = "Record screen, no audio (toggle)" })
 hl.bind("SUPER + SHIFT + ALT + R", hl.dsp.global("shell:recRegion"), { description = "Record region, no audio (toggle)" })
