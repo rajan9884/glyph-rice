@@ -14,8 +14,7 @@ PanelWindow {
     readonly property var cols: [2, 8, 8]
     property int tab: 0
     property int sel: 0
-    // ё → е: in CLDR words "black", but both spellings exist
-    readonly property string query: input.text.toLowerCase().replace(/ё/g, "е")
+    readonly property string query: input.text.toLowerCase()
 
     readonly property var lists: [Data.KAOMOJI, Data.EMOJI, Data.SYMBOLS]
     // words in charms.js are already lowercase — no toLowerCase and destructuring: 1900 emoji means one frame per letter.
