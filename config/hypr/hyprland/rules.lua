@@ -45,6 +45,7 @@ hl.window_rule({ match = { tag = "opaque_app" }, opaque = true })
 
 -- Sized & Centered Floaters
 hl.window_rule({ match = { class = "org.quickshell", title = "Rice" }, float = true, center = true }) -- shell switcher
+hl.window_rule({ match = { class = "[Zz]ap[Ff]ast" }, float = true, center = true, size = "860 670" })
 hl.window_rule({ match = { class = "org.pulseaudio.pavucontrol|yad-icon-browser|mpv" }, tag = "+float_60_70" })
 hl.window_rule({ match = { class = "org.gnome.Settings|org.gnome.Papers" }, tag = "+float_70_80" })
 hl.window_rule({ match = { class = "nwg-look" }, tag = "+float_50_60" })

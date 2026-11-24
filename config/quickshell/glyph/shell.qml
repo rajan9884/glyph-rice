@@ -20,6 +20,7 @@ import "shot"
 import "vpn"
 import "wall"
 import "keys"
+import "polkit"
 
 // glyph: rice in nothing os spirit. Home on wallpaper, bar, launcher, quick settings,
 // Glyph bars at edges instead of OSD, notification island, power menu, settings, deck (dashboard bottom), clipboard, charms (emoji and symbols), screenshots, vpn, wallpaper. Lock — separate process (lock.qml).
@@ -46,6 +47,7 @@ ShellRoot {
     Vpn { id: vpn; wifiNetwork: quick.net }
     Walls { id: walls }
     Keys { id: keys }
+    PolkitAgent { id: polkitAgent }
 
     Variants {
         model: Quickshell.screens
