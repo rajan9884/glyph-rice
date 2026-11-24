@@ -90,8 +90,8 @@ Singleton {
         }
     }
 
-    // kitty: include file with palette colors (kitty.conf includes it), SIGUSR1 — reread config
-    FileView { id: kitty; path: root.dir + "/kitty.conf"; printErrors: false }
+    // foot: include file with palette colors (foot.ini includes it), SIGUSR1 — reread config
+    FileView { id: foot; path: root.dir + "/foot.ini"; printErrors: false }
 
     function hypr(lua) { Quickshell.execDetached(["hyprctl", "eval", lua]); }
 
@@ -295,14 +295,12 @@ Singleton {
                + `inactive_border = "rgb(${h[2]})" } }, decoration = { shadow = { color = "rgba(${h[5]}20)" } } })`);
         }
         if (store.paintKitty) {
-            kitty.setText([
-                ["foreground", c[7]], ["background", c[1]], ["cursor", c[7]], ["cursor_text_color", c[1]],
-                ["selection_foreground", c[7]], ["selection_background", c[3]], ["url_color", c[4]],
-                ["active_border_color", c[5]], ["inactive_border_color", c[2]],
-                ["active_tab_foreground", c[7]], ["active_tab_background", c[5]],
-                ["inactive_tab_foreground", c[6]], ["inactive_tab_background", c[1]], ["tab_bar_background", c[0]]
-            ].map(([k, v]) => `${k} ${v}`).join("\n") + "\n");
-            Quickshell.execDetached(["pkill", "-USR1", "-x", "kitty"]);
+            foot.setText("[colors-dark]\n" + [
+                ["foreground", c[7]], ["background", c[1]],
+                ["selection-foreground", c[7]], ["selection-background", c[3]],
+                ["urls", c[4]]
+            ].map(([k, v]) => `${k}=${v.slice(1)}`).join("\n") + "\n");
+            Quickshell.execDetached(["pkill", "-USR1", "-x", "foot"]);
         }
     }
 

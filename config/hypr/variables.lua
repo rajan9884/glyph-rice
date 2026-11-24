@@ -20,7 +20,7 @@ return {
     lockCmd                    = rice .. " lock", -- lock current shell; second one won't start
 
     -- Apps
-    terminal                   = "kitty", -- not -1: shared process, broke GL after sleep (AMD and Intel), whitened all new windows until reboot (#12); cost — ~230ms vs ~20
+    terminal                   = "foot", -- foot: lightweight wayland-native terminal, fast startup
     browser                    = "helium-browser",
     fileExplorer               = "strata",
     audioSettings              = "pavucontrol",
@@ -28,7 +28,7 @@ return {
     -- so custom ones go in user.lua: require("variables").apps.editor = "codium". Not set — opens empty workspace.
     -- telegram and spotify installed by install.sh --with
     apps                       = {
-        sysmon        = "kitty --class btop -T btop btop",
+        sysmon        = "foot --app-id=btop -T btop -e btop",
         music         = "spotify-launcher",
         communication = "Telegram",
     },
