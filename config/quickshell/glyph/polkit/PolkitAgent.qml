@@ -2,23 +2,21 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
-import "components"
-import "PolkitModel.js" as PolkitModel
+import Quickshell.Services.Polkit
 
 Item {
   id: root
 
-  property string fontFamily: Theme.nf
-  property color accent: Theme.accent
-  property color background: Theme.bg
-  property color foreground: Theme.fg
-  property color border: Theme.s3
-  property color borderError: Theme.red
-  property var borderSpec: Border.surfaceSpec("polkit", errorFlash ? "border-error" : "border", errorFlash ? borderError : border, Math.max(1, Theme.corner(4)), "border-alpha")
-  property color scrim: Theme.scrim
-  readonly property int cornerRadius: Theme.corner(20)
-  property int contentMargin: Theme.space(18)
-  property int fieldHeight: Math.max(Theme.space(42), Style.spacing.controlHeight)
+  property string fontFamily: "JetBrainsMono Nerd Font"
+  property color accent: "#D71921"
+  property color background: "#000000"
+  property color foreground: "#F2F2F2"
+  property color border: "#2A2A2A"
+  property color borderError: "#F0434B"
+  property color scrim: "#000000"
+  readonly property int cornerRadius: 20
+  property int contentMargin: 18
+  property int fieldHeight: Math.max(42, 42)
 
   property bool closing: false
   property bool submitted: false
@@ -35,19 +33,18 @@ Item {
 
   readonly property bool dialogVisible: polkitAgent.isActive || closing
   readonly property bool fingerprintMode: fingerprintConfigured && !laptopClosed && dialogVisible && !responseRequired && !submitted && !errorFlash
-  readonly property int cardHeight: panel.height > 0 ? Math.min(fieldHeight + contentMargin * 2, panel.height - Style.gapsOut * 2) : fieldHeight + contentMargin * 2
-  readonly property int cardWidth: fingerprintMode ? cardHeight : Math.min(Theme.space(312), Math.max(Theme.space(260), panel.width - Style.gapsOut * 2))
+  readonly property int cardHeight: panel.height > 0 ? Math.min(fieldHeight + contentMargin * 2, panel.height - 10 * 2) : fieldHeight + contentMargin * 2
+  readonly property int cardWidth: fingerprintMode ? cardHeight : Math.min(312, Math.max(260, panel.width - 10 * 2))
 
   function authorizationLabel(message) {
-    return message ? PolkitModel.authorizationLabel(message, I18n.t) : I18n.t("polkit.authenticationNeeded")
+    return message ? message : "Authentication Required"
   }
 
   function loadPamConfig(raw) {
-    fingerprintConfigured = PolkitModel.fingerprintConfiguredFromPamConfig(raw)
+    fingerprintConfigured = false
   }
 
   function refreshLidState() {
-    if (!laptopClosedProc.running) laptopClosedProc.running = true
   }
 
   function resetSnapshot() {
@@ -81,7 +78,6 @@ Item {
     closing = false
     submitted = false
     passwordInput.text = ""
-    refreshLidState()
     syncFromFlow()
     Qt.callLater(refocus)
   }
@@ -139,9 +135,9 @@ Item {
 
   SequentialAnimation {
     id: shakeAnimation
-    NumberAnimation { target: root; property: "shakeOffset"; to: -8; duration: Style.duration(35); easing.type: Easing.OutQuad }
-    NumberAnimation { target: root; property: "shakeOffset"; to: 8; duration: Style.duration(50); easing.type: Easing.InOutQuad }
-    NumberAnimation { target: root; property: "shakeOffset"; to: 0; duration: Style.duration(55); easing.type: Easing.OutQuad }
+    NumberAnimation { target: root; property: "shakeOffset"; to: -8; duration: 35; easing.type: Easing.OutQuad }
+    NumberAnimation { target: root; property: "shakeOffset"; to: 8; duration: 50; easing.type: Easing.InOutQuad }
+    NumberAnimation { target: root; property: "shakeOffset"; to: 0; duration: 55; easing.type: Easing.OutQuad }
   }
 
   FileView {
@@ -207,9 +203,6 @@ Item {
 
   PanelWindow {
     id: panel
-    Binding { target: panel.contentItem; property: "LayoutMirroring.enabled"; value: I18n.rightToLeft }
-    Binding { target: panel.contentItem; property: "LayoutMirroring.childrenInherit"; value: true }
-
     visible: root.dialogVisible
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
@@ -228,7 +221,7 @@ Item {
       onClicked: root.refocus()
     }
 
-    BorderSurface {
+    Rectangle {
       id: card
       width: root.cardWidth
       height: root.cardHeight
@@ -236,8 +229,8 @@ Item {
       anchors.centerIn: parent
       anchors.horizontalCenterOffset: root.shakeOffset
       color: root.background
-      borderSpec: root.borderSpec
-      padding: root.contentMargin
+      border.width: 1
+      border.color: root.errorFlash ? root.borderError : root.border
 
       MouseArea { anchors.fill: parent; onClicked: root.refocus() }
 
@@ -258,40 +251,28 @@ Item {
         }
       }
 
-      OpticalGlyph {
-        anchors.centerIn: parent
-        width: Math.round(root.fieldHeight * 0.7)
-        height: width
-        visible: root.fingerprintMode
-        text: "\udb80\ude37"
-        fontFamily: root.fontFamily
-        fontSize: Math.round(root.fieldHeight * 0.7)
-        color: root.errorFlash ? Theme.red : root.accent
-      }
-
       Row {
         id: cardRow
-        visible: !root.fingerprintMode
         anchors.fill: parent
-        anchors.topMargin: card.contentTopInset
-        anchors.rightMargin: card.contentRightInset
-        anchors.bottomMargin: card.contentBottomInset
-        anchors.leftMargin: card.contentLeftInset
-        spacing: Theme.space(14)
+        anchors.topMargin: 18
+        anchors.rightMargin: 18
+        anchors.bottomMargin: 18
+        anchors.leftMargin: 18
+        spacing: 14
 
         Text {
           text: "\uf023"
-          color: root.errorFlash ? Theme.red : root.accent
+          color: root.errorFlash ? root.borderError : root.accent
           font.family: root.fontFamily
-          font.pixelSize: Style.font.iconLarge
-          width: Theme.space(26)
+          font.pixelSize: 18
+          width: 26
           height: root.fieldHeight
           horizontalAlignment: Text.AlignHCenter
           verticalAlignment: Text.AlignVCenter
         }
 
         Item {
-          width: parent.width - Theme.space(40)
+          width: parent.width - 40
           height: root.fieldHeight
 
           TextInput {
@@ -300,13 +281,13 @@ Item {
             verticalAlignment: TextInput.AlignVCenter
             activeFocusOnPress: true
             clip: true
-            selectionColor: Theme.fade(root.accent, 0.45)
+            selectionColor: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.45)
             selectedTextColor: root.foreground
             font.family: root.fontFamily
-            font.pixelSize: Style.font.iconLarge
+            font.pixelSize: 18
             echoMode: root.responseVisible ? TextInput.Normal : TextInput.Password
             passwordCharacter: "\u2022"
-            color: root.errorFlash ? Theme.red : root.foreground
+            color: root.errorFlash ? root.borderError : root.foreground
             cursorVisible: activeFocus && !root.submitted && !root.errorFlash
             readOnly: root.submitted || root.errorFlash
             enabled: root.dialogVisible
@@ -324,21 +305,21 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            text: root.errorFlash ? I18n.t("polkit.wrong") : (root.submitted ? I18n.t("polkit.checking") : I18n.t("polkit.enterPassword"))
-            color: root.errorFlash ? Theme.red : root.foreground
+            text: root.errorFlash ? "Wrong password" : (root.submitted ? "Checking..." : "Enter password")
+            color: root.errorFlash ? root.borderError : root.foreground
             opacity: root.errorFlash ? 1 : 0.36
             font.family: root.fontFamily
-            font.pixelSize: Style.font.iconLarge
+            font.pixelSize: 18
             elide: Text.ElideRight
             visible: passwordInput.text.length === 0
           }
 
           Rectangle {
-            width: Math.max(1, Theme.space(2))
-            height: Theme.space(24)
+            width: Math.max(1, 2)
+            height: 24
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
-            color: root.errorFlash ? Theme.red : root.foreground
+            color: root.errorFlash ? root.borderError : root.foreground
             visible: passwordInput.visible && passwordInput.activeFocus && passwordInput.text.length === 0 && !root.submitted && !root.errorFlash
           }
 
@@ -353,11 +334,11 @@ Item {
     }
 
     Rectangle {
-      width: Math.min(justificationText.implicitWidth + Theme.space(24), panel.width - Style.gapsOut * 2)
-      height: Theme.space(28)
+      width: Math.min(justificationText.implicitWidth + 24, panel.width - 10 * 2)
+      height: 28
       anchors.horizontalCenter: card.horizontalCenter
       anchors.bottom: card.top
-      anchors.bottomMargin: Theme.space(10)
+      anchors.bottomMargin: 10
       radius: root.cornerRadius
       color: root.background
 
@@ -365,12 +346,12 @@ Item {
         id: justificationText
         textFormat: Text.PlainText
         anchors.fill: parent
-        anchors.leftMargin: Theme.space(12)
-        anchors.rightMargin: Theme.space(12)
+        anchors.leftMargin: 12
+        anchors.rightMargin: 12
         text: root.authorizationLabel(root.currentMessage)
         color: root.foreground
         font.family: root.fontFamily
-        font.pixelSize: Style.font.bodySmall
+        font.pixelSize: 11
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideMiddle
