@@ -83,8 +83,17 @@ end
 local function toggle_special(name)
     return function()
         local cmd = vars.apps[name]
+        local has_windows = false
         for _, ws in ipairs(hl.get_workspaces()) do
-            if ws.name == "special:" .. name and ws.windows > 0 then cmd = nil end
+            if ws.name == "special:" .. name and ws.windows > 0 then
+                has_windows = true
+                cmd = nil
+            end
+        end
+        -- dim screen when scratchpad is empty (only for "special" workspace)
+        if name == "special" then
+            local dim = has_windows and 0.0 or 0.3
+            hl.exec_cmd('hyprctl eval "hl.config({ decoration = { dim_special = ' .. dim .. ' } })"')
         end
 -- show first, then launch: hypr opens window where focus was at launch time,
 -- and reverse order hid the workspace as soon as window appears

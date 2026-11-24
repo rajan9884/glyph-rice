@@ -21,7 +21,7 @@ PACMAN=(
     brightnessctl playerctl wl-clipboard cliphist grim slurp swappy imagemagick libvips libqalculate
     gpu-screen-recorder intel-media-driver libva-utils ydotool libnotify trash-cli
     # terminal and console tools
-    foot zsh zsh-autosuggestions zsh-syntax-highlighting zsh-completions fzf bat fd ripgrep gum tesseract tesseract-data-eng starship fastfetch btop cava eza zoxide direnv lazygit yazi tmux neovim
+    kitty zsh zsh-autosuggestions zsh-syntax-highlighting zsh-completions fzf bat fd ripgrep gum tesseract tesseract-data-eng starship fastfetch btop cava eza zoxide direnv lazygit yazi tmux neovim
     # apps from variables.lua
     pavucontrol
     # fonts (cjk — kaomoji in Charms), icons (Papirus-Dark — folder theme base), dark base for gtk.css
@@ -47,7 +47,6 @@ LINKS=(
     "$G                                         .config/quickshell/glyph"
     "config/quickshell/rice                     .config/quickshell/rice"
     "config/quickshell/rice/rice                .local/bin/rice"
-    "config/foot                                .config/foot"
     "config/qtengine                            .config/qtengine"
     "$G/term/qtengine.colors                    .config/qtengine.colors"
     "$G/term/starship.toml                      .config/starship.toml"

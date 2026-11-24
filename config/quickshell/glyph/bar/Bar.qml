@@ -124,11 +124,21 @@ PanelWindow {
                 }
             }
 
+            // SNI system-tray icons: just below ws (vert) or right of ws (top). Hidden when empty.
+            SysTray {
+                id: sysTrayBar
+                vert: root.vert
+                // side: centered horizontally, stacked below workspaces with same 24-gap
+                x: root.vert ? (parent.width - width) / 2 : ws.x + ws.width + 24
+                y: root.vert ? ws.y + ws.height + 24 : (parent.height - height) / 2
+                visible: items.length > 0
+            }
+
             // window title: from workspaces to clock, side — rotated
             Item {
                 id: title
-                x: root.vert ? (parent.width - width) / 2 : ws.x + ws.width + 24
-                y: root.vert ? ws.y + ws.height + 24 : (parent.height - height) / 2
+                x: root.vert ? (parent.width - width) / 2 : (sysTrayBar.visible ? sysTrayBar.x + sysTrayBar.width + 24 : ws.x + ws.width + 24)
+                y: root.vert ? (sysTrayBar.visible ? sysTrayBar.y + sysTrayBar.height + 24 : ws.y + ws.height + 24) : (parent.height - height) / 2
                 width: root.vert ? 20 : Math.max(0, clk.x - 24 - x)
                 height: root.vert ? Math.max(0, clk.y - 24 - y) : 20
                 clip: true

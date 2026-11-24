@@ -200,7 +200,7 @@ hl.bind(vars.kbTerminal, function() hl.exec_cmd(vars.terminal) end) -- SUPER + R
 hl.bind("SUPER + Q", function() hl.exec_cmd(vars.terminal) end) -- fallback terminal
 hl.bind(vars.kbBrowser, hl.dsp.exec_cmd(vars.browser)) -- SUPER + SHIFT + B
 hl.bind("SUPER + SHIFT + ALT + B", hl.dsp.exec_cmd(vars.browser .. " --incognito"))
-hl.bind("SUPER + B", hl.dsp.exec_cmd("foot -e btop"))
+hl.bind("SUPER + B", hl.dsp.exec_cmd("kitty --class btop -T btop -e btop"))
 hl.bind(vars.kbEditor, function() if vars.apps.editor then hl.exec_cmd(vars.apps.editor) end end)
 hl.bind(vars.kbFileExplorer, hl.dsp.exec_cmd(vars.fileExplorer)) -- SUPER + E
 hl.bind("SUPER + SHIFT + F", hl.dsp.exec_cmd("strata"))

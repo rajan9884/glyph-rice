@@ -90,9 +90,6 @@ Singleton {
         }
     }
 
-    // foot: include file with palette colors (foot.ini includes it), SIGUSR1 — reread config
-    FileView { id: foot; path: root.dir + "/foot.ini"; printErrors: false }
-
     function hypr(lua) { Quickshell.execDetached(["hyprctl", "eval", lua]); }
 
     // monitors from hyprctl monitors all — enabled and not mirrors: w × h and rates — current mode and its frequencies, x, y, lw × lh —
@@ -295,12 +292,20 @@ Singleton {
                + `inactive_border = "rgb(${h[2]})" } }, decoration = { shadow = { color = "rgba(${h[5]}20)" } } })`);
         }
         if (store.paintKitty) {
-            foot.setText("[colors-dark]\n" + [
-                ["foreground", c[7]], ["background", c[1]],
-                ["selection-foreground", c[7]], ["selection-background", c[3]],
-                ["urls", c[4]]
-            ].map(([k, v]) => `${k}=${v.slice(1)}`).join("\n") + "\n");
-            Quickshell.execDetached(["pkill", "-USR1", "-x", "foot"]);
+            const kittyConf = Quickshell.env("HOME") + "/.config/demonshot/kitty.conf";
+            Quickshell.writeFile(kittyConf,
+                "# glyph: written by Rules.paint(), do not edit by hand\n" + [
+                    ["foreground", c[7]], ["background", c[1]],
+                    ["selection_foreground", c[7]], ["selection_background", c[3]],
+                    ["cursor", c[7]], ["cursor_text_color", c[1]],
+                    ["url_color", c[4]],
+                    ["active_border_color", c[7]], ["inactive_border_color", c[3]],
+                    ["active_tab_foreground", c[1]], ["active_tab_background", c[7]],
+                    ["inactive_tab_foreground", c[5]], ["inactive_tab_background", c[1]],
+                    ["tab_bar_background", c[1]]
+                ].map(([k, v]) => `${k} ${v}`).join("\n") + "\n" +
+                pal.ansi.map((c, i) => `color${i} ${c}`).join("\n") + "\n");
+            Quickshell.execDetached(["pkill", "-USR1", "-x", "kitty"]);
         }
     }
 

@@ -231,8 +231,6 @@ Singleton {
 // Back to demonshot: `rice switch` does hyprctl reload, its applyAll will repaint
     function hypr(lua) { Quickshell.execDetached(["hyprctl", "eval", lua]); }
 
-    // foot includes this file after its own colors (include in foot.ini); demonshot writes its palette there too
-    FileView { id: foot; path: Quickshell.env("HOME") + "/.config/demonshot/foot.ini"; printErrors: false }
     // 16 ANSI from concept: pastel only for terminal. Light theme rearranges them (make)
     readonly property var ansi: ["#0E0E0E", "#D71921", "#9BB59A", "#D9C38A", "#8EA3C2", "#B79BC2", "#8FB8B8", "#C9C9C9",
                                  "#4A4A4A", "#F0434B", "#B5CCB4", "#E8D6A8", "#AABBD4", "#CDB6D6", "#ABCDCD", "#F2F2F2"]
@@ -250,16 +248,6 @@ Singleton {
            + `group = { col = { border_active = ${c(fg)}, border_inactive = ${c(s3)}, border_locked_active = ${c(fg)}, border_locked_inactive = ${c(mute)} }, `
            + `groupbar = { font_family = "${mono}", text_color = ${c(fg)}, col = { active = ${c(s3)}, inactive = ${c(s1)}, locked_active = ${c(s3)}, locked_inactive = ${c(s1)} } } }, `
            + `misc = { background_color = ${c(bg)} } })`);
-
-        foot.setText("# glyph: written by Theme.apply(), do not edit by hand\n[main]\n" + [
-            ["font", "Space Mono:size=11"], ["pad", "26x30"]
-        ].map(([k, v]) => `${k}=${v}`).join("\n") + "\n\n[colors-dark]\n" + [
-            ["foreground", fg], ["background", s1], ["selection-foreground", fg], ["selection-background", s3],
-            ["urls", grey]
-        ].map(([k, v]) => `${k}=${typeof v === "string" ? v.slice(1) : v.toString().slice(1, 7).toUpperCase()}`).join("\n") + "\n" +
-        pal.ansi.slice(0, 8).map((c, i) => `regular${i}=${c.slice(1)}`).join("\n") + "\n" +
-        pal.ansi.slice(8).map((c, i) => `bright${i}=${c.slice(1)}`).join("\n") + "\n");
-        Quickshell.execDetached(["pkill", "-USR1", "-x", "foot"]);
     }
 
     // gtk and qt — only on color change (shell.qml): apply() called on each rounding step too. Templates — own term/
