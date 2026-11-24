@@ -4,7 +4,7 @@
 #   bg=#000000  s1=#0E0E0E  s2=#1A1A1A  s3=#2A2A2A
 #   mute=#4A4A4A  grey=#8C8C8C  fg=#F2F2F2  red=#D71921
 
-# ── Manager (section name is [mgr] in yazi) ───────────────────────────────────
+# ── Manager ───────────────────────────────────────────────────────────────────
 [mgr]
 cwd             = { fg = "#8C8C8C" }
 
@@ -82,6 +82,7 @@ hovered         = { fg = "#F2F2F2", bg = "#1A1A1A", bold = true }
 footer          = { fg = "#4A4A4A", bg = "#000000" }
 
 # ── File type coloring ────────────────────────────────────────────────────────
+# `rules` replaces all built-in filetype rules completely.
 [filetype]
 rules = [
     { mime = "inode/directory",             fg = "#F2F2F2", bold = true  },
@@ -103,29 +104,66 @@ rules = [
 ]
 
 # ── Icons ─────────────────────────────────────────────────────────────────────
+# Clear ALL built-in icon tables first, then define only ours.
+# This prevents yazi's nvim-web-devicons colored defaults from bleeding through.
 [icon]
-rules = [
-    { name = "*/",    text = " ", fg = "#F2F2F2" },
-    { name = ".*",    text = " ", fg = "#4A4A4A" },
-    { name = "*.rs",  text = " ", fg = "#8C8C8C" },
-    { name = "*.py",  text = " ", fg = "#8C8C8C" },
-    { name = "*.js",  text = " ", fg = "#8C8C8C" },
-    { name = "*.ts",  text = " ", fg = "#8C8C8C" },
-    { name = "*.lua", text = " ", fg = "#8C8C8C" },
-    { name = "*.sh",  text = " ", fg = "#8C8C8C" },
-    { name = "*.md",  text = " ", fg = "#8C8C8C" },
-    { name = "*.txt", text = " ", fg = "#8C8C8C" },
-    { name = "*.pdf", text = " ", fg = "#8C8C8C" },
-    { name = "*.zip", text = " ", fg = "#4A4A4A" },
-    { name = "*.gz",  text = " ", fg = "#4A4A4A" },
-    { name = "*.7z",  text = " ", fg = "#4A4A4A" },
-    { name = "*.rar", text = " ", fg = "#4A4A4A" },
-    { name = "*.png", text = " ", fg = "#8C8C8C" },
-    { name = "*.jpg", text = " ", fg = "#8C8C8C" },
-    { name = "*.gif", text = " ", fg = "#8C8C8C" },
-    { name = "*.svg", text = " ", fg = "#8C8C8C" },
-    { name = "*.mp3", text = " ", fg = "#8C8C8C" },
-    { name = "*.mp4", text = " ", fg = "#8C8C8C" },
-    { name = "*.mkv", text = " ", fg = "#8C8C8C" },
-    { name = "*",     text = " ", fg = "#4A4A4A" },
+globs = []
+dirs  = []
+files = []
+exts  = []
+conds = []
+
+prepend_rules = [
+    # Directories — white
+    { name = "*/",     text = " ", fg = "#F2F2F2" },
+
+    # Dotfiles — dim
+    { name = ".*",     text = " ", fg = "#4A4A4A" },
+
+    # Code
+    { ext = "rs",      text = " ", fg = "#8C8C8C" },
+    { ext = "py",      text = " ", fg = "#8C8C8C" },
+    { ext = "js",      text = " ", fg = "#8C8C8C" },
+    { ext = "ts",      text = " ", fg = "#8C8C8C" },
+    { ext = "lua",     text = " ", fg = "#8C8C8C" },
+    { ext = "sh",      text = " ", fg = "#8C8C8C" },
+    { ext = "bash",    text = " ", fg = "#8C8C8C" },
+    { ext = "zsh",     text = " ", fg = "#8C8C8C" },
+    { ext = "toml",    text = " ", fg = "#8C8C8C" },
+    { ext = "json",    text = " ", fg = "#8C8C8C" },
+    { ext = "yaml",    text = " ", fg = "#8C8C8C" },
+    { ext = "yml",     text = " ", fg = "#8C8C8C" },
+    { ext = "md",      text = " ", fg = "#8C8C8C" },
+    { ext = "txt",     text = " ", fg = "#8C8C8C" },
+
+    # Documents
+    { ext = "pdf",     text = " ", fg = "#8C8C8C" },
+
+    # Archives — dim bold handled by filetype; icon dim
+    { ext = "zip",     text = " ", fg = "#4A4A4A" },
+    { ext = "tar",     text = " ", fg = "#4A4A4A" },
+    { ext = "gz",      text = " ", fg = "#4A4A4A" },
+    { ext = "xz",      text = " ", fg = "#4A4A4A" },
+    { ext = "zst",     text = " ", fg = "#4A4A4A" },
+    { ext = "7z",      text = " ", fg = "#4A4A4A" },
+    { ext = "rar",     text = " ", fg = "#4A4A4A" },
+
+    # Images
+    { ext = "png",     text = " ", fg = "#8C8C8C" },
+    { ext = "jpg",     text = " ", fg = "#8C8C8C" },
+    { ext = "jpeg",    text = " ", fg = "#8C8C8C" },
+    { ext = "gif",     text = " ", fg = "#8C8C8C" },
+    { ext = "svg",     text = " ", fg = "#8C8C8C" },
+    { ext = "webp",    text = " ", fg = "#8C8C8C" },
+
+    # Audio / Video
+    { ext = "mp3",     text = " ", fg = "#8C8C8C" },
+    { ext = "flac",    text = " ", fg = "#8C8C8C" },
+    { ext = "wav",     text = " ", fg = "#8C8C8C" },
+    { ext = "mp4",     text = " ", fg = "#8C8C8C" },
+    { ext = "mkv",     text = " ", fg = "#8C8C8C" },
+    { ext = "webm",    text = " ", fg = "#8C8C8C" },
+
+    # Fallback — everything else gets a plain file glyph, dim
+    { name = "*",      text = " ", fg = "#4A4A4A" },
 ]
