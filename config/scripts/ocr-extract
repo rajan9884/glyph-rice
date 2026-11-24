@@ -11,6 +11,14 @@ set -euo pipefail
 export PATH="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:$PATH"
 TESSERACT="$(command -v tesseract 2>/dev/null || command -v tesseract-ocr 2>/dev/null || echo tesseract)"
 
+# ── Lock: only one OCR session at a time ─────────────────────────────────────
+LOCKFILE="${XDG_RUNTIME_DIR:-/tmp}/ocr-extract.lock"
+exec 9>"$LOCKFILE"
+if ! flock -n 9; then
+    exit 0   # already running — silently ignore the extra key press
+fi
+# lock is held until the script exits (fd 9 closes)
+
 TMP_PNG="$(mktemp -t ocr-XXXXXX.png)"
 trap 'rm -f "$TMP_PNG"' EXIT
 
