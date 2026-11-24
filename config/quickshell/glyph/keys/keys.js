@@ -10,7 +10,7 @@ var KEYBINDINGS = [
     { cat: "apps", desc: "Terminal", keys: ["SUPER", "Return"], detail: "Kitty terminal (also Super+Q)" },
     { cat: "apps", desc: "Application Launcher", keys: ["SUPER", "Space"], detail: "Quickshell App Launcher (or tap Super)" },
     { cat: "apps", desc: "Altar / Dashboard", keys: ["ALT", "Space"], detail: "Bottom widgets & sys dashboard" },
-    { cat: "apps", desc: "Browser (Helium)", keys: ["SUPER", "SHIFT", "B"], detail: "Launch default browser (Helium)" },
+    { cat: "apps", desc: "Browser (Firefox)", keys: ["SUPER", "SHIFT", "B"], detail: "Launch Firefox browser" },
     { cat: "apps", desc: "Private Browser", keys: ["SUPER", "SHIFT", "ALT", "B"], detail: "Launch Helium in incognito" },
     { cat: "apps", desc: "File Manager (Strata)", keys: ["SUPER", "E"], detail: "Launch Strata (also Super+Shift+F)" },
     { cat: "apps", desc: "System Monitor", keys: ["SUPER", "B"], detail: "Kitty running btop" },

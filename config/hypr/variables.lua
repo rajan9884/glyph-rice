@@ -21,7 +21,7 @@ return {
 
     -- Apps
     terminal                   = "foot", -- foot: lightweight wayland-native terminal, fast startup
-    browser                    = "helium-browser",
+    browser                    = "firefox",
     fileExplorer               = "strata",
     audioSettings              = "pavucontrol",
     -- special workspace apps (launch if empty) and editor. Binds read them on press,

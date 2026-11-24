@@ -112,39 +112,40 @@ footer               = { fg = "#4A4A4A", bg = "#000000" }
 
 # ── File type coloring ────────────────────────────────────────────────────────
 # Nothing OS: one accent, everything else near-monochrome.
-# Directories bright white, executables red, media/archives grey, rest muted.
+# mime = "inode/directory" for dirs (required by this yazi version — name alone not accepted).
 [filetype]
 rules = [
     # Directories — bright, bold
-    { name = "*/", fg = "#F2F2F2", bold = true },
-
-    # Executables — red accent (the one live color)
-    { name = "*", is = "exec", fg = "#D71921" },
-
-    # Images
-    { mime = "image/*", fg = "#8C8C8C" },
-
-    # Audio / Video
-    { mime = "{audio,video}/*", fg = "#8C8C8C" },
-
-    # Archives / compressed
-    { mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "#4A4A4A", bold = true },
-
-    # Documents / PDFs
-    { mime = "application/pdf",  fg = "#8C8C8C" },
-    { mime = "text/*",           fg = "#F2F2F2" },
+    { mime = "inode/directory",  fg = "#F2F2F2", bold = true },
 
     # Symlinks
-    { name = "*", is = "link",   fg = "#4A4A4A", italic = true },
+    { mime = "inode/symlink",    fg = "#4A4A4A", italic = true },
 
-    # Orphaned symlinks
-    { name = "*", is = "orphan", fg = "#D71921", italic = true },
+    # Images
+    { mime = "image/*",          fg = "#8C8C8C" },
 
-    # Hidden files (dotfiles)
-    { name = ".*",               fg = "#4A4A4A" },
+    # Audio / Video
+    { mime = "audio/*",          fg = "#8C8C8C" },
+    { mime = "video/*",          fg = "#8C8C8C" },
+
+    # Archives / compressed
+    { mime = "application/zip",                 fg = "#4A4A4A", bold = true },
+    { mime = "application/x-tar",               fg = "#4A4A4A", bold = true },
+    { mime = "application/x-bzip2",             fg = "#4A4A4A", bold = true },
+    { mime = "application/gzip",                fg = "#4A4A4A", bold = true },
+    { mime = "application/x-xz",               fg = "#4A4A4A", bold = true },
+    { mime = "application/x-7z-compressed",     fg = "#4A4A4A", bold = true },
+    { mime = "application/x-rar",               fg = "#4A4A4A", bold = true },
+    { mime = "application/zstd",                fg = "#4A4A4A", bold = true },
+
+    # Documents
+    { mime = "application/pdf",  fg = "#8C8C8C" },
+
+    # Text / source code
+    { mime = "text/*",           fg = "#F2F2F2" },
 
     # Fallback — everything else
-    { name = "*",                fg = "#8C8C8C" },
+    { mime = "*",                fg = "#8C8C8C" },
 ]
 
 # ── Icon theme ────────────────────────────────────────────────────────────────

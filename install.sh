@@ -14,7 +14,7 @@ PACMAN=(
     base-devel git curl jq python
     # session
     hyprland hypridle hyprsunset hyprpicker xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
-    sddm quickshell polkit-gnome gnome-keyring geoclue upower xdg-user-dirs
+    sddm quickshell polkit-gnome gnome-keyring geoclue upower xdg-user-dirs firefox
     # audio, network, bluetooth
     pipewire pipewire-pulse pipewire-alsa wireplumber networkmanager bluez bluez-utils blueman power-profiles-daemon
     # utilities invoked by keybinds and shell
@@ -30,7 +30,7 @@ PACMAN=(
 
 AUR=(
     qtengine darkly-bin bibata-cursor-theme-bin
-    zen-browser-bin strata-bin
+    strata-bin
 )
 
 # optional components (caelestia-style). Keybinds in special workspaces launch apps from hypr/variables.lua
