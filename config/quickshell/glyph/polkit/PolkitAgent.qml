@@ -13,7 +13,7 @@ Item {
   property color foreground: "#F2F2F2"
   property color border: "#2A2A2A"
   property color borderError: "#F0434B"
-  property color scrim: "#000000"
+  property color scrim: "#80000000"
   readonly property int cornerRadius: 20
   property int contentMargin: 18
   property int fieldHeight: Math.max(42, 42)
@@ -333,29 +333,5 @@ Item {
       }
     }
 
-    Rectangle {
-      width: Math.min(justificationText.implicitWidth + 24, panel.width - 10 * 2)
-      height: 28
-      anchors.horizontalCenter: card.horizontalCenter
-      anchors.bottom: card.top
-      anchors.bottomMargin: 10
-      radius: root.cornerRadius
-      color: root.background
-
-      Text {
-        id: justificationText
-        textFormat: Text.PlainText
-        anchors.fill: parent
-        anchors.leftMargin: 12
-        anchors.rightMargin: 12
-        text: root.authorizationLabel(root.currentMessage)
-        color: root.foreground
-        font.family: root.fontFamily
-        font.pixelSize: 11
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideMiddle
-      }
-    }
   }
 }

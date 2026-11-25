@@ -1,0 +1,2 @@
+module polkit
+PolkitAgent 1.0 PolkitAgent.qml

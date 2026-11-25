@@ -91,9 +91,10 @@ local function toggle_special(name)
             end
         end
         -- dim screen when scratchpad is empty (only for "special" workspace)
+        -- use hl.config() for synchronous immediate effect instead of async hyprctl eval
         if name == "special" then
             local dim = has_windows and 0.0 or 0.3
-            hl.exec_cmd('hyprctl eval "hl.config({ decoration = { dim_special = ' .. dim .. ' } })"')
+            hl.config({ decoration = { dim_special = dim } })
         end
 -- show first, then launch: hypr opens window where focus was at launch time,
 -- and reverse order hid the workspace as soon as window appears

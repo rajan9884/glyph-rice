@@ -10,7 +10,6 @@ hl.on("hyprland.start", function()
 
     -- Keyring and auth
     hl.exec_cmd("gnome-keyring-daemon --start --components=secrets")
-    hl.exec_cmd("/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1")
 
     -- Bluetooth pairing agent: handles PIN/confirmation prompts for pairing.
     -- Its SNI tray icon is filtered out in bar/SysTray.qml — bar uses Quickshell.Bluetooth natively.

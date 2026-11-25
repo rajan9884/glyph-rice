@@ -18,6 +18,8 @@ hl.config({
         key_press_enables_dpms       = true,
 
         background_color             = "rgb(" .. scheme.void .. ")",
+        
+        disable_watchdog_warning     = true,
     },
 
     xwayland = {

@@ -23,7 +23,7 @@ alias t='tmux attach || tmux new -s Work'
 alias lg='lazygit'
 alias top='btop'
 alias v='nvim'
-alias zed='zed-editor'
+alias zed='zeditor'
 
 if command -v rice >/dev/null 2>&1; then
   alias qs='rice'
