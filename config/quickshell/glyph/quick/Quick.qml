@@ -32,7 +32,58 @@ PanelWindow {
     }
     // open list: "wifi" | "bt" — under pills (Picker), "rec" — under tiles (Rec), "" — nothing
     property string pick: ""
-    onOpenChanged: if (open) Sys.earRun([]); else pick = ""
+    property int noteSel: -1
+    readonly property var noteModel: Notes.list.slice().reverse()
+    onOpenChanged: {
+        if (open) {
+            Sys.earRun([]);
+            noteSel = noteModel.length > 0 ? 0 : -1;
+            panel.forceActiveFocus();
+        } else {
+            pick = "";
+            noteSel = -1;
+        }
+    }
+    onVisibleChanged: if (visible && open) panel.forceActiveFocus()
+    onNoteModelChanged: {
+        const n = noteModel.length;
+        if (n === 0) noteSel = -1;
+        else if (open) noteSel = noteSel < 0 ? 0 : Math.min(noteSel, n - 1);
+        Qt.callLater(ensureNoteVisible);
+    }
+    onNoteSelChanged: Qt.callLater(ensureNoteVisible)
+    function ensureNoteVisible() {
+        if (noteSel < 0 || noteSel >= notes.count) return;
+        if (noteSel === 0) notes.positionViewAtBeginning();
+        else if (noteSel === notes.count - 1) notes.positionViewAtEnd();
+        else notes.positionViewAtIndex(noteSel, ListView.Contain);
+    }
+    function moveNote(delta) {
+        const n = noteModel.length;
+        if (!n) { noteSel = -1; return; }
+        pin();
+        noteSel = noteSel < 0 ? (delta >= 0 ? 0 : n - 1) : Math.max(0, Math.min(noteSel + delta, n - 1));
+    }
+    function jumpNote(idx) {
+        const n = noteModel.length;
+        if (!n) { noteSel = -1; return; }
+        pin();
+        noteSel = Math.max(0, Math.min(idx, n - 1));
+    }
+    function activateNote(idx) {
+        const it = noteModel[idx];
+        if (!it) return;
+        pin();
+        const def = it.actions.find(a => a.identifier === "default");
+        if (def) def.invoke();
+        if (it.tracked) it.dismiss();
+    }
+    function dismissNote(idx) {
+        const it = noteModel[idx];
+        if (!it) return;
+        pin();
+        if (it.tracked) it.dismiss();
+    }
     // cursor 500ms outside panel and Hot strip — close. seen: Hyprland doesn't give cursor of fresh surface until mouse moves —
     // before first movement unknown where it is, panel waits (otherwise with still cursor opened and immediately closed)
     Timer { interval: 500; running: root.open && root.peeked && seen.hovered && !keep.hovered && !edge.hovered; onTriggered: root.close() }
@@ -45,7 +96,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: open && !peeked ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     WlrLayershell.namespace: "glyph-quick"
 
     readonly property var wifi: Networking.devices.values.find(d => d.type === DeviceType.Wifi) ?? null
@@ -82,7 +133,44 @@ PanelWindow {
                 color: Theme.s1
                 border { width: 1; color: Theme.s2 }
                 focus: true
-                Keys.onEscapePressed: root.close()
+                Keys.onPressed: e => {
+                    const ctrl = e.modifiers & Qt.ControlModifier;
+                    const shift = e.modifiers & Qt.ShiftModifier;
+                    if (e.key === Qt.Key_Escape) {
+                        if (picker.ask) picker.ask = null;
+                        else root.close();
+                        e.accepted = true;
+                        return;
+                    }
+                    if (picker.ask) return;
+                    if (e.key === Qt.Key_Down || e.key === Qt.Key_J) {
+                        root.moveNote(1);
+                    } else if (e.key === Qt.Key_Up || e.key === Qt.Key_K) {
+                        root.moveNote(-1);
+                    } else if (e.key === Qt.Key_PageDown || (ctrl && e.key === Qt.Key_D)) {
+                        root.moveNote(4);
+                    } else if (e.key === Qt.Key_PageUp || (ctrl && e.key === Qt.Key_U)) {
+                        root.moveNote(-4);
+                    } else if (e.key === Qt.Key_Home || (e.key === Qt.Key_G && !shift)) {
+                        root.jumpNote(0);
+                    } else if (e.key === Qt.Key_End || (e.key === Qt.Key_G && shift)) {
+                        root.jumpNote(root.noteModel.length - 1);
+                    } else if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter || e.key === Qt.Key_Space) {
+                        if (root.noteModel.length > 0) root.activateNote(root.noteSel >= 0 ? root.noteSel : 0);
+                        else return;
+                    } else if (e.key === Qt.Key_Delete || e.key === Qt.Key_Backspace || e.key === Qt.Key_X) {
+                        if (!root.noteModel.length) return;
+                        if (shift || ctrl) { root.pin(); Notes.clear(); }
+                        else root.dismissNote(root.noteSel >= 0 ? root.noteSel : 0);
+                    } else if (shift && e.key === Qt.Key_C) {
+                        if (!root.noteModel.length) return;
+                        root.pin();
+                        Notes.clear();
+                    } else {
+                        return;
+                    }
+                    e.accepted = true;
+                }
                 MouseArea { anchors.fill: parent } // click on panel doesn't close
 
                 Column {
@@ -308,7 +396,12 @@ PanelWindow {
                     Item {
                         width: parent.width
                         height: 20
-                        Lb { x: 6; text: `notifications · ${Notes.list.length}` }
+                        Lb {
+                            x: 6
+                            text: root.noteSel >= 0 && Notes.list.length > 0
+                                ? `notifications · ${root.noteSel + 1}/${Notes.list.length}`
+                                : `notifications · ${Notes.list.length}`
+                        }
                         Lb {
                             anchors.right: parent.right
                             rightPadding: 6
@@ -316,6 +409,7 @@ PanelWindow {
                             text: "clear all"
                             color: Theme.fg
                             TapHandler { onTapped: { root.pin(); Notes.clear(); } }
+                            HoverHandler { cursorShape: Qt.PointingHandCursor }
                         }
                     }
 
@@ -330,17 +424,46 @@ PanelWindow {
                         Behavior on shown { enabled: Rules.moving; NumberAnimation { duration: Theme.t; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.glide } }
                         clip: true
                         spacing: 10
-                        model: Notes.list.slice().reverse()
+                        model: root.noteModel
                         boundsBehavior: Flickable.StopAtBounds
+                        maximumFlickVelocity: 6000
+                        flickDeceleration: 1500
+
+                        // Boost touchpad & wheel scroll in notification list (Hyprland scales touchpad by scroll_factor, e.g. 0.3)
+                        MouseArea {
+                            anchors.fill: parent
+                            z: -1
+                            acceptedButtons: Qt.NoButton
+                            onWheel: e => {
+                                const maxY = Math.max(notes.originY, notes.originY + notes.contentHeight - notes.height);
+                                if (maxY <= notes.originY) { e.accepted = false; return; }
+                                const touch = e.phase !== Qt.NoScrollPhase;
+                                let dy = 0;
+                                if (touch && e.pixelDelta.y !== 0) {
+                                    const boost = Math.max(2.0, 1.4 / Math.max(0.1, Rules.store.scroll / 100));
+                                    dy = e.pixelDelta.y * boost;
+                                } else {
+                                    dy = (e.angleDelta.y / 120) * (touch ? 180 : 140);
+                                }
+                                if (dy === 0) return;
+                                notes.cancelFlick();
+                                notes.contentY = Math.max(notes.originY, Math.min(maxY, notes.contentY - dy));
+                            }
+                        }
 
                         delegate: Rectangle {
                             required property var modelData
+                            required property int index
                             readonly property var n: modelData
+                            readonly property bool sel: root.noteSel === index
                             width: notes.width
                             height: body.height + 32
                             radius: Theme.corner(26)
-                            color: Theme.s2
-                            border { width: n.urgency === NotificationUrgency.Critical ? 1 : 0; color: Theme.red }
+                            color: sel ? Theme.s3 : Theme.s2
+                            border {
+                                width: sel && n.urgency === NotificationUrgency.Critical ? 2 : (n.urgency === NotificationUrgency.Critical || sel ? 1 : 0)
+                                color: n.urgency === NotificationUrgency.Critical ? Theme.red : Theme.fg
+                            }
 
                             Rectangle {
                                 x: 18
@@ -384,14 +507,8 @@ PanelWindow {
                             }
                             // click — default action (if any) and remove. invoke() itself closes notification, and with it
                             // and this card — further only via its reference, and dismiss only if still alive
-                            TapHandler {
-                                onTapped: {
-                                    root.pin();
-                                    const it = n;
-                                    it.actions.find(a => a.identifier === "default")?.invoke();
-                                    if (it.tracked) it.dismiss();
-                                }
-                            }
+                            TapHandler { onTapped: root.activateNote(index) }
+                            HoverHandler { cursorShape: Qt.PointingHandCursor }
                         }
                     }
                 }

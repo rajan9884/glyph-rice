@@ -22,7 +22,7 @@ hl.window_rule({
 hl.window_rule({
     match = {
         title =
-        "(Select|Open)( a)? (File|Folder)(s)?|File (Operation|Upload)( Progress)?|.* Properties|Export Image as PNG|GIMP Crash Debug|Save As|Library",
+        "(Select|Open)( a)? (File|Folder|Workspace)(s)?|File (Operation|Upload)( Progress)?|.* Properties|Export Image as PNG|GIMP Crash Debug|Save As|Library",
     },
     tag   = "+float",
 })
@@ -48,7 +48,8 @@ hl.window_rule({ match = { class = "org.quickshell", title = "Rice" }, float = t
 hl.window_rule({ match = { class = "[Zz]ap[Ff]ast" }, float = true, center = true, size = "860 670" })
 hl.window_rule({ match = { class = "org.pulseaudio.pavucontrol|yad-icon-browser|mpv" }, tag = "+float_60_70" })
 hl.window_rule({ match = { class = "org.gnome.Settings|org.gnome.Papers" }, tag = "+float_70_80" })
-hl.window_rule({ match = { class = "nwg-look" }, tag = "+float_50_60" })
+hl.window_rule({ match = { class = "nwg-look|[Xx]dg-desktop-portal(-gtk|-hyprland)?|org\\.freedesktop\\.impl\\.portal\\.desktop\\.gtk" }, tag = "+float_50_60" })
+hl.window_rule({ match = { title = "(Select|Open)( a)? (File|Folder|Workspace)(s)?|File Upload|Save As" }, tag = "+float_50_60" })
 
 hl.window_rule({
     match  = { tag = "float_60_70" },
