@@ -15,7 +15,7 @@ PanelWindow {
         code: "\u{F0169}", text: "\u{F09A8}", link: "\u{F0337}", image: "\u{F02E9}", color: "\u{F03D8}", file: "\u{F0214}"
     })
     readonly property var filters: ["all", "text", "links", "images"]
-    // ponytail: image cache shared with demonshot — same files in XDG_RUNTIME_DIR, cleaned on session exit
+    // Note: image cache shared with demonshot — same files in XDG_RUNTIME_DIR, cleaned on session exit
     readonly property string cache: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/demonshot-clip-"
 
     property var entries: [] // { id, text, type }
@@ -42,7 +42,7 @@ PanelWindow {
         if (/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(t)) return "color";
         if (/^https?:\/\/\S+$/.test(t)) return "link";
         if (/^(file:\/\/|~?\/)\S+$/.test(t)) return "file";
-        // ponytail: guess code by brackets and familiar commands; missed — shown as text
+        // Caveat: guess code from brackets and common commands; misses fall back to plain text
         if (/[{};]|^(sudo|git|cd|qs|hyprctl|pacman|paru|yay|npm|cargo|systemctl|sh|bash|curl) /.test(t)) return "code";
         return "text";
     }
@@ -71,7 +71,7 @@ PanelWindow {
         Quickshell.execDetached(["sh", "-c", 'cliphist decode "$1" | wl-copy', "sh", cur.id]);
         close();
     }
-    // ponytail: pin only protects from deletion; max-items in cliphist still evicts old
+    // Caveat: pinning only protects against manual delete; cliphist max-items still evicts old entries
     function hold() {
         const id = cur?.id;
         if (!id) return;
@@ -366,7 +366,7 @@ PanelWindow {
     }
     Component {
         id: codePv
-        // ponytail: long strings just clipped by card edge
+        // Note: long lines are simply clipped at the card edge
         Text {
             text: root.body.replace(/\s+$/, "")
             textFormat: Text.PlainText

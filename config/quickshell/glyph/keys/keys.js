@@ -8,10 +8,10 @@ var KEYBINDINGS = [
 
     // Apps & Shell
     { cat: "apps", desc: "Terminal", keys: ["SUPER", "Return"], detail: "Kitty terminal (also Super+Q)" },
-    { cat: "apps", desc: "Application Launcher", keys: ["SUPER", "Space"], detail: "Quickshell App Launcher (or tap Super)" },
+    { cat: "apps", desc: "Application Launcher", keys: ["SUPER", "Space"], detail: "Quickshell App Launcher" },
     { cat: "apps", desc: "Altar / Dashboard", keys: ["ALT", "Space"], detail: "Bottom widgets & sys dashboard" },
     { cat: "apps", desc: "Browser (Firefox)", keys: ["SUPER", "SHIFT", "B"], detail: "Launch Firefox browser" },
-    { cat: "apps", desc: "Private Browser", keys: ["SUPER", "SHIFT", "ALT", "B"], detail: "Launch Helium in incognito" },
+    { cat: "apps", desc: "Private Browser", keys: ["SUPER", "SHIFT", "ALT", "B"], detail: "Launch Firefox private window" },
     { cat: "apps", desc: "File Manager (Strata)", keys: ["SUPER", "E"], detail: "Launch Strata (also Super+Shift+F)" },
     { cat: "apps", desc: "System Monitor", keys: ["SUPER", "B"], detail: "Kitty running btop" },
     { cat: "apps", desc: "Clipboard History", keys: ["SUPER", "CTRL", "V"], detail: "Quickshell clipboard manager popup" },
@@ -40,7 +40,6 @@ var KEYBINDINGS = [
     { cat: "windows", desc: "Interactive Mouse Move", keys: ["SUPER", "Left Click"], detail: "Drag window to reposition" },
     { cat: "windows", desc: "Interactive Mouse Resize", keys: ["SUPER", "Right Click"], detail: "Drag window border to resize" },
     { cat: "windows", desc: "Center Window", keys: ["CTRL", "SUPER", "\\"], detail: "Center floating window on screen" },
-    { cat: "windows", desc: "Center & Resize (55x70)", keys: ["CTRL", "SUPER", "ALT", "\\"], detail: "Resize to 55%x70% and center" },
     { cat: "windows", desc: "Picture-in-Picture", keys: ["SUPER", "ALT", "\\"], detail: "Float, pin and snap to bottom corner" },
     { cat: "windows", desc: "Pin Window on Top", keys: ["SUPER", "SHIFT", "P"], detail: "Sticky window visible across workspaces" },
     { cat: "windows", desc: "Cycle Open Apps", keys: ["SUPER", "Tab"], detail: "Cycle across open apps (Shift for prev)" },

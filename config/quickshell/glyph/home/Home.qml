@@ -24,7 +24,7 @@ PanelWindow {
     readonly property bool home: visible && idle(screen)
     // values — shared across all homes (screens where home exists and visible): otherwise Binding's of neighboring homes would overwrite
     // other. Not in delegate: destroyed Binding doesn't restore value — removed widget, cava would run forever.
-    // ponytail: cava — if in list, even not fitting in 3 × 3
+    // Caveat: cava runs whenever enabled in the widget list, even if it doesn't fit on the 3x3 grid
     readonly property var homes: Quickshell.screens.filter(s => Theme.scr(s.name, "home") && idle(s))
     Binding { target: SysStats; property: "detailed"; value: root.homes.length > 0 || Sys.deckOpen }
     Binding { target: Cava; property: "active"; value: root.homes.some(s => Theme.scr(s.name, "widgets").includes("cava")) }

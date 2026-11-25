@@ -28,11 +28,10 @@ Item {
   property bool failed: false
   property bool errorFlash: false
   property bool fingerprintConfigured: false
-  property bool laptopClosed: false
   property int shakeOffset: 0
 
   readonly property bool dialogVisible: polkitAgent.isActive || closing
-  readonly property bool fingerprintMode: fingerprintConfigured && !laptopClosed && dialogVisible && !responseRequired && !submitted && !errorFlash
+  readonly property bool fingerprintMode: fingerprintConfigured && dialogVisible && !responseRequired && !submitted && !errorFlash
   readonly property int cardHeight: panel.height > 0 ? Math.min(fieldHeight + contentMargin * 2, panel.height - 10 * 2) : fieldHeight + contentMargin * 2
   readonly property int cardWidth: fingerprintMode ? cardHeight : Math.min(312, Math.max(260, panel.width - 10 * 2))
 
@@ -42,9 +41,6 @@ Item {
 
   function loadPamConfig(raw) {
     fingerprintConfigured = false
-  }
-
-  function refreshLidState() {
   }
 
   function resetSnapshot() {
@@ -147,13 +143,6 @@ Item {
     onLoaded: root.loadPamConfig(text())
     onLoadFailed: root.fingerprintConfigured = false
     onFileChanged: reload()
-  }
-
-  Process {
-    id: laptopClosedProc
-    command: ["bash", "-c", "arch-hw-laptop-closed && echo closed || echo open"]
-    stdout: StdioCollector { id: laptopClosedOut; waitForEnd: true }
-    onExited: root.laptopClosed = String(laptopClosedOut.text || "").trim() === "closed"
   }
 
   PolkitAgent {

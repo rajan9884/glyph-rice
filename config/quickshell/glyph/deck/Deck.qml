@@ -48,7 +48,7 @@ Scope {
 
             screen: modelData
 // in fullscreen Top not drawn, Qt doesn't commit frames and layer change Hyprland doesn't see — strips there not,
-// Super+Space creates window anew, already in Overlay. ponytail: hasFullscreen — and maximized (Super+Alt+F), edge there also silent
+// Super+Space recreates the window directly in Overlay. Caveat: hasFullscreen includes maximized windows (Super+Alt+F), so edge hover is silent there too
             visible: Theme.state.deckHover && root.ids.length > 0 && !Hyprland.monitorFor(modelData)?.activeWorkspace?.hasFullscreen || t > 0
             anchors.bottom: true
             implicitWidth: Math.ceil(panel.width * Theme.s)

@@ -41,8 +41,7 @@ Singleton {
     readonly property string mono: "Space Mono"            // labels caps
     readonly property string nf: "JetBrainsMono Nerd Font" // icons
 
-    // layout canvas 1920×1080 → screen. ponytail: per first screen, second same layout (scale — hypr), home just pulls bento
-    // bento to the right edge
+    // Layout canvas 1920x1080 scaled to screen. Note: scaled by the first screen (Hyprland handles scaling on secondary monitors; Home aligns bento to right edge)
     readonly property real s: {
         const sc = Quickshell.screens[0];
         return sc ? Math.min(sc.width / 1920, sc.height / 1080) : 1;
@@ -72,7 +71,7 @@ Singleton {
     readonly property int t: 350
 
 // wallpaper drawn from copy under screen (picker makes, magick): original may be 40 MB png, loads seconds.
-// ponytail: no copy (cache cleared, path typed manually) — empty, grid and orb until open picker
+// Note: if the cached copy is missing (cache cleared or path entered manually), show dot grid and orb until picker opens
     readonly property string wallCache: (Quickshell.env("XDG_CACHE_HOME") || Quickshell.env("HOME") + "/.cache") + "/glyph/walls"
     function wallSrc(p) { return p ? `${wallCache}/${p.slice(p.lastIndexOf("/") + 1)}.jpg` : ""; }
     function url(p) { return p ? "file://" + p.split("/").map(encodeURIComponent).join("/") : ""; }
@@ -255,9 +254,8 @@ Singleton {
     // term/, as rice sets. Real file (not link) not touched, like rice. Substitution in two passes via @n@: palette color
 // may match glyph color, replaced after. gtk and qt take colors at next launch: own gtk.css gtk reads once,
 // theme poke doesn't help (checked on gtk 3 and 4).
-// ponytail: light theme here dark — gtk base dark (adw-gtk3-dark): with wallpaper — same variant in dark, with palettes —
-// dark pair (latte → mocha), with nothing — glyph; light — change gtk-theme and color-scheme too. btop not painted — its folder
-    // link entirely in repo, no place to copy; if needed — color_theme path to copy
+// Caveat: light theme keeps GTK dark (adw-gtk3-dark) — wallpaper uses dark variant, schemes use dark pair (latte -> mocha),
+// nothing uses glyph; for full light apps, switch gtk-theme and color-scheme too. btop isn't recolored (its folder is symlinked into repo)
     function apps() {
         const from = glyphDark.concat(ansi.slice(1, 7));
         const p = pal.light ? pair(false) ?? make({ light: false }) : pal;

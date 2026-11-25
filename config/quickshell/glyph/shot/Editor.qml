@@ -48,7 +48,7 @@ Scope {
 
     function save() {
         commitWord();
-        // ponytail: snapshot overwritten; original beside it — if want to roll back edits
+        // Note: overwrites the edited snapshot file; keep the original beside it if rollback is needed
         canvas.grabToImage(r => {
             if (!r.saveToFile(root.shot)) return;
             Quickshell.execDetached(["sh", "-c", 'wl-copy -t image/png < "$1" && notify-send -a "screenshot" -i "$1" "Screenshot saved" "Edits saved and copied to clipboard"', "sh", root.shot]);
@@ -155,7 +155,7 @@ Scope {
                         onPositionChanged: e => {
                             const l = root.live;
                             if (!l) return;
-                            // ponytail: stroke copied on every step — O(n²), enough for strokes of thousands of points
+                            // Note: copies the stroke array per move — O(n^2), still fast enough for strokes up to a few thousand points
                             if (l.k === "pen") root.live = Object.assign({}, l, { pts: l.pts.concat([Qt.point(e.x, e.y)]) });
                             else root.live = Object.assign({}, l, { x2: e.x, y2: e.y });
                         }

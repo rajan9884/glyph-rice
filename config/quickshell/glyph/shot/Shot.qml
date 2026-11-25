@@ -45,7 +45,7 @@ Scope {
         scr = Quickshell.screens.find(s => s.name === mon?.name) ?? Quickshell.screens[0];
         Hyprland.refreshToplevels();
         picker.unloadImage(frozenImg.source); // canvas holds frame in memory until unload
-        freeze.next = `${run}/glyph-frozen-${Date.now()}.ppm`; // ponytail: ppm without compression — grim 90 ms vs 450 png
+        freeze.next = `${run}/glyph-frozen-${Date.now()}.ppm`; // Note: uncompressed PPM keeps grim capture ~90 ms vs ~450 ms for PNG
         freeze.exec(["sh", "-c", 'rm -f "$3"/glyph-frozen-*; grim -t ppm -o "$1" "$2" && echo ok', "sh", scr.name, freeze.next, run]);
     }
     function close() { aim.shown = false; }
@@ -363,7 +363,7 @@ Scope {
             id: fstage
 
             // flash: shot area glows white and fades. Record — red frame outside, no fill or glow:
-            // recorder starts while it fades, shouldn't get in frame. ponytail: full screen record frame beyond edge — not visible
+            // Note: recorder starts while fading so it shouldn't appear in frame; full-screen border sits off-screen and is invisible
             Rectangle {
                 id: flash
                 readonly property real o: root.shotRec ? 4 : 0

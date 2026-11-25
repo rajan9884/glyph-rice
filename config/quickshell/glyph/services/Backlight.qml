@@ -7,7 +7,7 @@ import QtQuick
 
 // screen backlight, like caelestia — device not hardcoded: what brightnessctl picks by default (first backlight).
 // Value — from sysfs: inotify on it is silent, but writing to brightness sends uevent change — wait for it from udev, not poll.
-// No backlight (desktop PC) — dev empty, value 0. ponytail: external monitors via DDC (ddcutil, like caelestia) — none
+// No backlight (desktop PC) — dev stays empty, value 0. Note: external DDC monitors (ddcutil) are not handled here
 Singleton {
     id: root
 

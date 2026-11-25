@@ -56,7 +56,7 @@ Singleton {
     readonly property string layout: kbd.slice(0, 2).toLowerCase() // "English (US)" → en
 
 // ---- recording and airplane mode: same ones turned on by hypr binds, so polling. Night light — shared with demonshot, in its rules.json
-// ponytail: pgrep every 3s; will become noticeable — watch processes via systemd-run --scope ----
+// Caveat: polls via pgrep every 3s; if overhead becomes noticeable, watch processes via systemd-run --scope ----
     property bool rec: false
     readonly property bool night: Rules.store.night
     property bool air: false
@@ -81,11 +81,19 @@ Singleton {
         const a = ["", "default_output", "default_input", "default_output|default_input"][st.recAudio];
         return `-f ${st.recFps} -q ${["medium", "high", "very_high", "ultra"][st.recQuality]} -cursor ${st.recCursor ? "yes" : "no"}` + (a ? ` -a "${a}"` : "");
     }
-    // second time — stop. Area — slurp; cancelled selection — gsr won't start, rec will fix polling
+    // second time — stop. Area — slurp; cancelled selection — gsr won't start, notification isn't sent
     // LIBVA_DRIVER_NAME=iHD required for Intel Iris Xe hardware h264 encoding (intel-media-driver)
+    Timer { id: recSync; interval: 1500; onTriggered: poll.running = true }
     function toggleRec() {
-        const w = Theme.state.recArea ? `-w region -region "$(slurp -f %wx%h+%x+%y)"` : `-w ${Hyprland.focusedMonitor?.name ?? "screen"}`;
-        sh(`if pkill -INT -f '^gpu-screen-recorder'; then notify-send -a "recorder" -i video-x-generic "Recording saved" "Saved to $(xdg-user-dir VIDEOS)"; else notify-send -a "recorder" -i video-x-generic "Recording started" "Screen recording in progress"; exec env LIBVA_DRIVER_NAME=iHD gpu-screen-recorder ${w} ${recArgs()} -o "$(xdg-user-dir VIDEOS)/rec-$(date +%F_%H-%M-%S).mp4"; fi`);
+        const args = recArgs();
+        if (Theme.state.recArea) {
+            sh(`if pkill -INT -f '^gpu-screen-recorder'; then notify-send -a "recorder" -i video-x-generic "Recording saved" "Saved to $(xdg-user-dir VIDEOS)"; else sel=$(slurp -f %wx%h+%x+%y) && [ -n "$sel" ] && { notify-send -a "recorder" -i video-x-generic "Recording started" "Screen recording in progress"; exec env LIBVA_DRIVER_NAME=iHD gpu-screen-recorder -w region -region "$sel" ${args} -o "$(xdg-user-dir VIDEOS)/rec-$(date +%F_%H-%M-%S).mp4"; }; fi`);
+            if (rec) rec = false;
+            else recSync.restart();
+            return;
+        }
+        const mon = Hyprland.focusedMonitor?.name ?? "screen";
+        sh(`if pkill -INT -f '^gpu-screen-recorder'; then notify-send -a "recorder" -i video-x-generic "Recording saved" "Saved to $(xdg-user-dir VIDEOS)"; else notify-send -a "recorder" -i video-x-generic "Recording started" "Screen recording in progress"; exec env LIBVA_DRIVER_NAME=iHD gpu-screen-recorder -w ${mon} ${args} -o "$(xdg-user-dir VIDEOS)/rec-$(date +%F_%H-%M-%S).mp4"; fi`);
         rec = !rec;
     }
     function toggleNight() { Rules.store.night = !night; Rules.night(); }
@@ -93,13 +101,13 @@ Singleton {
     function toggleMic() { if (mic?.audio) mic.audio.muted = !mic.audio.muted; }
 
 // ---- Nothing / CMF headphones: noise cancelling and charge via ./ear (their RFCOMM protocol). Ask when opening quick settings.
-// ponytail: recognize by name, like Gadgetbridge; not Nothing — ear won't respond, ear stays null ----
+// Caveat: matched by device name like Gadgetbridge; non-Nothing earbuds won't respond so `ear` stays null ----
     readonly property var buds: Bluetooth.devices.values.find(d => d.connected && /^(nothing|cmf|ear)\b|^(buds|neckband) pro$/i.test(d.deviceName || d.name)) ?? null
     property var ear: null // {mode?, l, r, case?} or {mode?, bat} for full-size and neckband
     readonly property var earBat: ["bat", "l", "r", "case"].filter(k => ear?.[k] !== undefined)
     onBudsChanged: { ear = null; earNext = null; }
-// right after connection channel not ready yet — ask every 2s until they answer. ponytail: not Nothing with similar name
-// will be polled like that while connected
+// Right after connecting the RFCOMM channel isn't ready yet — retry every 2s until it answers. Caveat: non-Nothing
+// devices with a similar name will keep getting polled while connected
     Timer { interval: 2000; repeat: true; running: !!root.buds && !root.ear; onTriggered: root.earRun([]) }
     // modes by model — like BudsLink (deviceConfigs). Missing from list — full set: for others Ear, CMF, Headphone it's like this
     readonly property var ancModes: {
@@ -207,7 +215,7 @@ Singleton {
     }
 
 // ---- vpn: clash verge via its tray items, like agreement in demonshot.
-// ponytail: captions English (language: en in verge); other language — change strings ----
+// Caveat: expects English labels (language: en in Clash Verge); update strings if using another language ----
     readonly property var verge: SystemTray.items.values.find(i => i.title === "clash-verge" || i.id.includes("clash-verge")) ?? null
     QsMenuOpener { id: vmenu; menu: root.verge?.menu ?? null }
     readonly property var vpnItems: ["System Proxy", "TUN Mode"]

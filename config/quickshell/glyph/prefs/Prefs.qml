@@ -34,7 +34,7 @@ PanelWindow {
         layout: "\u{F030C}", wifi: "\u{F05A9}", bluetooth: "\u{F00AF}", sound: "\u{F057E}", notes: "\u{F009A}",
         mode: "\u{F04C5}", power: "\u{F0425}"
     })
-    // round widgets of home, rest — square 40. ponytail: ram/gpu/disk/battery — guess (rings); Home will decide — fix
+    // Round Home widgets, others are 40px squares. Note: ram/gpu/disk/battery guessed as rings; update once Home layout settles
     readonly property var rounds: ["weather", "cpu", "ram", "gpu", "disk", "battery", "buds", "cava"]
 
     // ---- opening: animates itself (glyph layers in hypr no_anim). Section remembered between openings ----
@@ -787,8 +787,7 @@ PanelWindow {
                 Pick { label: "theme"; opts: ["dark", "light"]; cur: Theme.light ? 1 : 0; onPicked: i => Theme.setLight(i === 1) }
             }
 
-            // what source has. Height same for all: Page centered, layout wouldn't jump on source change. ponytail: 300 — by
-            // eye, palettes in two rows; grows — Item grows after it
+            // Source-specific options. Same min height for all so the centered page doesn't jump on source change (300px fits two palette rows; taller content expands naturally)
             Item {
                 width: 1040
                 height: Math.max(300, own.height)
@@ -923,7 +922,7 @@ PanelWindow {
                     }
                 }
 
-                // ponytail: blur and shadows not visible in layout (flat black) — only toggles
+                // Note: blur and shadows aren't visible in this flat black preview — toggles only
                 Column {
                     spacing: 14
                     Toggle { width: 200; text: "blur"; on: root.r.blur; onFlip: { root.r.blur = !root.r.blur; Theme.apply(); } }

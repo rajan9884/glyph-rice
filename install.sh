@@ -14,11 +14,11 @@ PACMAN=(
     base-devel git curl jq python
     # session
     hyprland hypridle hyprsunset hyprpicker xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
-    sddm quickshell polkit-gnome gnome-keyring geoclue upower xdg-user-dirs firefox
+    sddm quickshell gnome-keyring geoclue upower xdg-user-dirs firefox
     # audio, network, bluetooth
     pipewire pipewire-pulse pipewire-alsa wireplumber networkmanager bluez bluez-utils blueman power-profiles-daemon
     # utilities invoked by keybinds and shell
-    brightnessctl playerctl wl-clipboard cliphist grim slurp swappy imagemagick libvips libqalculate
+    brightnessctl playerctl wl-clipboard cliphist grim slurp imagemagick libvips libqalculate
     gpu-screen-recorder intel-media-driver libva-utils ydotool libnotify trash-cli
     # terminal and console tools
     kitty zsh zsh-autosuggestions zsh-syntax-highlighting zsh-completions fzf bat fd ripgrep gum tesseract tesseract-data-eng starship fastfetch btop cava eza zoxide direnv lazygit yazi tmux neovim
@@ -147,6 +147,9 @@ services() {
     # reads /dev/input/event* — any user process could snoop keystrokes/passwords. Takes effect after reboot
     echo 'KERNEL=="uinput", SUBSYSTEM=="misc", TAG+="uaccess", OPTIONS+="static_node=uinput"' \
         | sudo tee /etc/udev/rules.d/70-glyph-uinput.rules >/dev/null
+    # Wait briefly between retries so systemd-logind uaccess ACLs finish applying on login
+    mkdir -p "$HOME/.config/systemd/user/ydotool.service.d"
+    printf '[Service]\nRestartSec=2\nStartLimitIntervalSec=0\n' > "$HOME/.config/systemd/user/ydotool.service.d/wait-uinput.conf"
     xdg-user-dirs-update
 }
 

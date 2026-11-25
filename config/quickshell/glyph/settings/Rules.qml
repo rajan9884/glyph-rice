@@ -140,7 +140,7 @@ Singleton {
     // hypr rule for screen. It replaces config rule entirely — mode (current resolution) and rotation we carry as is.
     // External stand by pos from main, main then at 0x0: on auto hypr would put it to right of explicit ones. Exit — like key():
     // desc: of monitor, not port — rule lives in hypr until reload, and projector in same port would take place and mode of this
-    // ponytail: vrr, 10 bit and hdr from user.lua shell rule removes; if needed — carry from hyprctl, like transform
+    // Caveat: shell monitor rule strips vrr, 10-bit, and hdr from user.lua; if needed, carry them over from hyprctl like transform
     function rule(m) {
         const own = m.name === mon.name, w = want(m), pos = out(m)?.pos;
         const at = own ? (mons.some(x => x.name !== m.name && out(x)?.pos) ? "0x0" : "auto") : pos ? `${pos[0]}x${pos[1]}` : "auto";
@@ -242,7 +242,7 @@ Singleton {
         hypr(`hl.config({ general = { gaps_in = ${s.gapsIn}, gaps_out = ${s.gapsOut}, border_size = ${s.border} }, `
            + `decoration = { rounding = ${s.rounding}, blur = { enabled = ${blurOn} }, shadow = { enabled = ${shadowOn} } } })`);
     }
-    // ponytail: only on/off; slam/snap — override curves from animations.lua
+    // Note: on/off only; slam/snap curves are overridden from animations.lua
     function motion() { hypr(`hl.config({ animations = { enabled = ${moving} } })`); }
     readonly property var switches: [["alt+shift", "grp:alt_shift_toggle"], ["caps", "grp:caps_toggle"], ["ctrl+shift", "grp:ctrl_shift_toggle"]]
     function input() {

@@ -101,11 +101,11 @@ hl.bind("SUPER + G", hl.dsp.global("shell:game"))  -- game mode has no key by de
 | | |
 |---|---|
 | **Shell** | `quickshell` 0.3.1+ (Qt 6.9+) · `hyprland` 0.56+ · `hypridle` · `hyprsunset` · `xdg-desktop-portal-hyprland` · `jq` · `curl` · `python3` · `libqalculate` |
-| **System** | `sddm` 0.21+ (Qt 6 greeter) · `networkmanager` · `bluez` · `blueman` (Bluetooth pairing agent) · `pipewire` · `pipewire-pulse` · `pipewire-alsa` · `wireplumber` · `upower` · `power-profiles-daemon` · `brightnessctl` · `libnotify` · `playerctl` · `polkit-gnome` · `gnome-keyring` · `geoclue` |
+| **System** | `sddm` 0.21+ (Qt 6 greeter) · `networkmanager` · `bluez` · `blueman` (Bluetooth pairing agent) · `pipewire` · `pipewire-pulse` · `pipewire-alsa` · `wireplumber` · `upower` · `power-profiles-daemon` · `brightnessctl` · `libnotify` · `playerctl` · `gnome-keyring` · `geoclue` |
 | **Capture** | `grim` · `slurp` · `imagemagick` · `libvips` · `gpu-screen-recorder` · `cliphist` · `wl-clipboard` |
 | **Terminal** | `kitty` · `zsh` · `starship` · `fastfetch` · `btop` · `cava` · `eza` · `zoxide` · `direnv` |
 | **Look** | `papirus-icon-theme` · `adw-gtk-theme` · JetBrains Mono Nerd Font · `noto-fonts-emoji` (Emoji 17) · `noto-fonts-cjk` · Bibata · `qtengine` · `darkly` |
-| **Optional** | `clash-verge-rev` · `nvidia-utils` · `ydotool` · `hyprpicker` · `swappy` · `trash-cli` |
+| **Optional** | `clash-verge-rev` · `nvidia-utils` · `ydotool` · `hyprpicker` · `trash-cli` |
 
 From the AUR only `qtengine`, `darkly`, Bibata and Zen, plus Spicetify and Clash Verge if picked; all optional. The VPN panel expects Clash Verge in English.
 NixOS: change the `/usr/lib` agent paths in `hypr/hyprland/execs.lua` and the Papirus path in `quickshell/rice/rice`.

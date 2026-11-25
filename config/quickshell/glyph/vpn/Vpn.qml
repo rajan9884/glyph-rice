@@ -15,7 +15,7 @@ PanelWindow {
 
     // ---- verge: tray ----
     readonly property var verge: Sys.verge
-    // ponytail: we find tray items by English labels (language: en in verge); another language — change strings here
+    // Caveat: matches tray items by English labels (language: en in Clash Verge); update strings for other languages
     function child(op, pre) { return op.children.values.find(e => e.text.startsWith(pre)) ?? null; }
     function checked(op, pre) { return child(op, pre)?.checkState === Qt.Checked; }
     QsMenuOpener { id: tray; menu: root.verge?.menu ?? null }
@@ -91,7 +91,7 @@ PanelWindow {
         }
         wantT.restart();
     }
-    // ponytail: "from when" — from enable with live shell; tunnel raised before start counts from start
+    // Note: tracks connection start from enable time while shell is running; tunnels already active at startup count from shell start
     property date since: new Date()
     onConnectedChanged: if (connected) since = new Date()
 
@@ -170,7 +170,7 @@ PanelWindow {
     Timer { running: root.portal && !root.connected; interval: 5000; repeat: true; onTriggered: Networking.checkConnectivity() }
 
     // ---- kill switch: outside only through tunnel (nft table, /usr/local/bin/glyph-kill via pkexec). No helper — no button.
-    // ponytail: helper and polkit rule installed manually, not install.sh. On portal removed, otherwise sign-in page won't open
+    // Note: helper and polkit rule are installed manually, not via install.sh; paused during captive-portal login so sign-in can load
     readonly property string killer: "/usr/local/bin/glyph-kill"
     property bool killable: false
     readonly property bool kill: Theme.state.vpnKill && !portal && !killPortal
@@ -204,7 +204,7 @@ PanelWindow {
         onFileChanged: reload()
         onLoaded: root.prof = root.parseProf(text())
     }
-    // ponytail: we read yaml with regexes — profiles.yaml written by verge, format is flat
+    // Note: parsed with regexes because Clash Verge writes profiles.yaml in a flat structure
     function parseProf(t) {
         const cur = /^current: *(\S+)/m.exec(t)?.[1], b = t.split(/\n- /).find(s => s.startsWith(`uid: ${cur}`)) ?? "";
         const f = k => new RegExp(`^ +${k}: *(.*)$`, "m").exec(b)?.[1]?.trim() ?? "";
@@ -519,7 +519,7 @@ PanelWindow {
                     }
                 }
 
-                // ponytail: didn't fit — they scroll, panel doesn't grow
+                // Note: overflows scroll cleanly inside the list without resizing the panel
                 ListView {
                     id: list
                     anchors { top: rcol.bottom; topMargin: 4; bottom: parent.bottom; left: parent.left; right: parent.right }

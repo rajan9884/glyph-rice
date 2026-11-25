@@ -18,16 +18,11 @@ alias l='ls'
 alias lla='ll -a'
 
 # Development & Tools
-alias ld='lazydocker'
 alias t='tmux attach || tmux new -s Work'
 alias lg='lazygit'
 alias top='btop'
 alias v='nvim'
 alias zed='zeditor'
-
-if command -v rice >/dev/null 2>&1; then
-  alias qs='rice'
-fi
 
 # cava with dots like Glyph Matrix (~/.config/cava/dots); regular bars — command cava
 if command -v cava >/dev/null 2>&1 && [ -f "$HOME/.config/cava/dots" ]; then
@@ -40,6 +35,38 @@ n() {
   else
     command nvim "$@"
   fi
+}
+
+eff() {
+  local file
+  file=$(command ff --select 2>/dev/null || true)
+  [ -n "$file" ] && "${EDITOR:-nvim}" "$file"
+}
+
+fe() {
+  local file
+  if command -v bat >/dev/null 2>&1; then
+    file=$(fzf --preview 'bat --color=always --style=numbers --line-range=:300 {}')
+  else
+    file=$(fzf)
+  fi
+  [ -n "$file" ] && "${EDITOR:-nvim}" "$file"
+}
+
+fkill() {
+  local pid
+  pid=$(ps -ef | sed 1d | fzf -m --header="Select process to kill" | awk '{print $2}')
+  [ -n "$pid" ] && printf '%s\n' "$pid" | xargs kill -"${1:-9}"
+}
+
+y() {
+  local tmp cwd
+  tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+  command yazi "$@" --cwd-file="$tmp"
+  if cwd="$(command cat -- "$tmp" 2>/dev/null)" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+    builtin cd -- "$cwd"
+  fi
+  rm -f -- "$tmp"
 }
 
 open() (

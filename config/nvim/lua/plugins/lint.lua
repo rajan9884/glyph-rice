@@ -24,10 +24,21 @@ return {
       cpp = { "cpplint" },
     }
 
-    -- Auto-lint on save and text change
-    vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave", "TextChanged" }, {
+    -- Auto-lint on save, open, and insert leave (skip linters missing from PATH)
+    vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave" }, {
       callback = function()
-        lint.try_lint()
+        local names = lint.linters_by_ft[vim.bo.filetype] or {}
+        local available = vim.tbl_filter(function(name)
+          local linter = lint.linters[name]
+          local cmd = type(linter) == "table" and linter.cmd or name
+          if type(cmd) == "function" then
+            cmd = cmd()
+          end
+          return type(cmd) == "string" and vim.fn.executable(cmd) == 1
+        end, names)
+        if #available > 0 then
+          lint.try_lint(available)
+        end
       end,
     })
   end,

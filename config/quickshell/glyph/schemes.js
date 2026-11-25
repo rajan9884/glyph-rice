@@ -52,7 +52,7 @@ const GROUPS = ["catppuccin", "rosé pine", "gruvbox", "more"];
 // ---- wallpaper → palette, as dynamic in caelestia (material you). Wallpaper tone — source color, variant decides where to turn hue
 // of accent and how much color to give it and grays. Layout — from base (nothing palette of same theme): grays same lightness, accent —
 // lightness of red (in dark — lighter: on black dull accent is lost), terminal — glyph pastel, turned to accent
-// no more than 15° (harmonize in material). ponytail: not hct, but oklch — grays same lightness (L oklab = ∛Y), chroma ≈ hct / 360,
+// no more than 15° (harmonize in Material). Note: uses OKLCH rather than HCT — grays share lightness (L_oklab = ∛Y), chroma ≈ hct / 360,
 // hues slightly different; content and fidelity — without dislike and temperature. Outside sRGB — chroma down until it fits ----
 // a — accent (primary), n — surfaces bg, s1, s2, fg (neutral), v — lines and labels s3, mute, grey (neutral variant):
 // [hue turn°, chroma hct]. src — chroma — share of tone chroma; keep — accent — the tone itself, and its lightness (but not

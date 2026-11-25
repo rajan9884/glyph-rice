@@ -20,7 +20,7 @@ local function active_window_is_terminal()
         return false
     end
     local class = (window.class or ""):lower()
-    if class:find("foot") or class:find("alacritty") or class:find("kitty") or class:find("terminal") then
+    if class:find("alacritty") or class:find("kitty") or class:find("terminal") then
         return true
     end
     for _, tag in ipairs(window.tags or {}) do
@@ -153,12 +153,6 @@ hl.bind("SUPER + ALT + Equal", hl.dsp.window.resize({ x = 25, y = 0, relative = 
 hl.bind("SUPER + CTRL + Minus", hl.dsp.window.resize({ x = -300, y = 0, relative = true }), { repeating = true })
 hl.bind("SUPER + CTRL + Equal", hl.dsp.window.resize({ x = 300, y = 0, relative = true }), { repeating = true })
 
--- Fine arrow resize fallback
-hl.bind("SUPER + ALT + left", hl.dsp.window.resize(fn.resize_active_window(-10, 0)), { repeating = true })
-hl.bind("SUPER + ALT + right", hl.dsp.window.resize(fn.resize_active_window(10, 0)), { repeating = true })
-hl.bind("SUPER + ALT + up", hl.dsp.window.resize(fn.resize_active_window(0, -10)), { repeating = true })
-hl.bind("SUPER + ALT + down", hl.dsp.window.resize(fn.resize_active_window(0, 10)), { repeating = true })
-
 -- Mouse window actions
 hl.bind("SUPER + SHIFT + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind(vars.kbMoveWindow, hl.dsp.window.drag(), { mouse = true })
@@ -168,8 +162,6 @@ hl.bind(vars.kbResizeWindow, hl.dsp.window.resize(), { mouse = true })
 -- Window layouts & sizing
 hl.bind("SUPER + J", hl.dsp.layout("togglesplit"), { description = "Toggle layout split" })
 hl.bind("CTRL + SUPER + Backslash", hl.dsp.window.center())
-hl.bind("CTRL + SUPER + ALT + Backslash", hl.dsp.window.resize(fn.resize_by_screen(55, 70)))
-hl.bind("CTRL + SUPER + ALT + Backslash", hl.dsp.window.center())
 hl.bind(vars.kbWindowPip, function()
     local a = hl.get_active_window()
     if a then
@@ -199,7 +191,7 @@ hl.bind(vars.kbTodoWs, fn.toggle_special("todo"))
 hl.bind(vars.kbTerminal, function() hl.exec_cmd(vars.terminal) end) -- SUPER + Return
 hl.bind("SUPER + Q", function() hl.exec_cmd(vars.terminal) end) -- fallback terminal
 hl.bind(vars.kbBrowser, hl.dsp.exec_cmd(vars.browser)) -- SUPER + SHIFT + B
-hl.bind("SUPER + SHIFT + ALT + B", hl.dsp.exec_cmd(vars.browser .. " --incognito"))
+hl.bind("SUPER + SHIFT + ALT + B", hl.dsp.exec_cmd(vars.browser .. " --private-window"))
 hl.bind("SUPER + B", hl.dsp.exec_cmd("kitty --class btop -T btop -e btop"))
 hl.bind(vars.kbEditor, function() if vars.apps.editor then hl.exec_cmd(vars.apps.editor) end end)
 hl.bind(vars.kbFileExplorer, hl.dsp.exec_cmd(vars.fileExplorer)) -- SUPER + E

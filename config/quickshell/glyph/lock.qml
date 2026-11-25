@@ -58,7 +58,7 @@ ShellRoot {
     WlSessionLock {
         id: lock
         locked: true
-        // ponytail: lockedChanged after locked = false doesn't come (quickshell 0.3.2), and secure drops — exit on it
+        // Workaround: lockedChanged isn't emitted after locked = false in quickshell 0.3.2, so quit when secure drops
         onSecureChanged: if (!secure) Qt.quit()
 
         LockSurface { auth: gate; layout: shell.layout }

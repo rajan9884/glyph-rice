@@ -1,17 +1,34 @@
 #!/usr/bin/env bash
-# ff — fuzzy find files with fzf + bat preview, open in nvim
-# Usage: ff [fzf-extra-args...]
+# ff — fuzzy find files with fzf + bat/kitty preview, open in nvim
+# Usage: ff [--select] [fzf-extra-args...]
 
 set -euo pipefail
 
-if command -v bat >/dev/null 2>&1; then
-  PREVIEW='bat --color=always {}'
+PRINT_ONLY=false
+ARGS=()
+for arg in "$@"; do
+  if [ "$arg" = "--select" ]; then
+    PRINT_ONLY=true
+  else
+    ARGS+=("$arg")
+  fi
+done
+
+if [ "${TERM:-}" = "xterm-kitty" ] && command -v kitty >/dev/null 2>&1; then
+  PREVIEW='case $(file --mime-type -b {}) in image/*) kitty icat --clear --transfer-mode=memory --stdin=no --place=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}@0x0 {} ;; *) bat --style=numbers --color=always {} 2>/dev/null || cat {} ;; esac'
+elif command -v bat >/dev/null 2>&1; then
+  PREVIEW='bat --style=numbers --color=always {}'
 else
   PREVIEW='cat {}'
 fi
 
-mapfile -t files < <(fzf -m --preview="$PREVIEW" "$@")
+if $PRINT_ONLY; then
+  fzf --preview="$PREVIEW" "${ARGS[@]}"
+  exit 0
+fi
+
+mapfile -t files < <(fzf -m --preview="$PREVIEW" "${ARGS[@]}")
 
 if [ ${#files[@]} -gt 0 ]; then
-  nvim "${files[@]}"
+  "${EDITOR:-nvim}" "${files[@]}"
 fi

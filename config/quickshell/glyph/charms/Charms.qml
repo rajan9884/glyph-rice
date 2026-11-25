@@ -106,7 +106,7 @@ PanelWindow {
                         font: input.font
                         color: Theme.mute
                     }
-                    // ponytail: ←→ move along grid, not text — queries here are single word
+                    // Note: left/right arrows navigate the grid instead of moving cursor — search queries are single words
                     Keys.onPressed: e => {
                         const n = root.cols[root.tab];
                         if (e.key === Qt.Key_Escape) root.close();

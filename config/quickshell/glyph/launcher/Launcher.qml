@@ -445,7 +445,7 @@ PanelWindow {
 
     // ---- tray app menu: hovered on circle — card under it with its menu items, like tray in caelestia bar.
     // Submenu — in place of list, «back» on top; item — do and close launcher. Left both circle and card — fades.
-    // ponytail: menu mouse only; arrows into it — if asked ----
+    // Note: tray menu is mouse-only for now; keyboard arrow navigation can be added later if needed ----
     property Item hotCell: null // circle under cursor
     property var peek: null // { tray, x, y }: whose menu and where bottom of its cell is; held until card fades
     property var sub: [] // open submenus, on screen — last one

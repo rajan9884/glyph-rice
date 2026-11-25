@@ -4,7 +4,7 @@ import QtQuick
 import Quickshell
 
 // focus timer: spins clock panel (cal/Cal) while running — Glyph fills bottom bar. Counts to end, not by ticks —
-// doesn't drift if tick is late. ponytail: lives in memory, shell restart resets; to persist — in Theme.state
+// doesn't drift if a tick is late. Note: state lives in memory and resets on shell restart; move to Theme.state to persist
 Singleton {
     id: root
 

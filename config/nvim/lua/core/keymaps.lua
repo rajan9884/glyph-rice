@@ -79,10 +79,3 @@ map("t", "<C-l>", "<cmd>wincmd l<CR>", { desc = "Go to right window" })
 map("n", "<leader>tw", "<cmd>set wrap!<CR>", { desc = "Toggle wrap" })
 map("n", "<leader>tl", "<cmd>set relativenumber!<CR>", { desc = "Toggle relative numbers" })
 map("n", "<leader>ts", "<cmd>set spell!<CR>", { desc = "Toggle spell" })
-
--- Highlight yank
-vim.api.nvim_create_autocmd("TextYankPost", {
-  callback = function()
-    vim.highlight.on_yank({ higroup = "IncSearch", timeout = 200 })
-  end,
-})
