@@ -246,7 +246,7 @@ PanelWindow {
     Component {
         id: soundC
         Icon {
-            text: Sys.muted ? "\u{F075F}" : "\u{F057E}"
+            text: Sys.volIcon
             Notch { onNotch: d => Sys.setVol(Sys.vol + d * 0.05) }
         }
     }

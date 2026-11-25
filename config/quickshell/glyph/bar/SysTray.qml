@@ -84,31 +84,31 @@ Item {
     }
 
     // ---- context menu popup ----
-    // Single shared popup: opens beside the tapped icon, fades in/out
-    PopupWindow {
+    // Fullscreen transparent overlay: closes instantly on any click outside the menu card, no timeout
+    PanelWindow {
         id: menuPopup
 
         property Item src: null
+        property real posX: 0
+        property real posY: 0
         property real t: visible ? 1 : 0
         Behavior on t { NumberAnimation { duration: Theme.t; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.glide } }
 
         visible: opener.menu !== null && src !== null && _open
         property bool _open: false
 
+        screen: root.QsWindow.window?.screen ?? null
+        anchors { left: true; right: true; top: true; bottom: true }
+        exclusionMode: ExclusionMode.Ignore
         color: "transparent"
-        implicitWidth:  Math.ceil(260 * Theme.s)
-        implicitHeight: Math.ceil(card.height * Theme.s)
-
-        // anchor beside the clicked cell; for vert bar → right side, for top bar → below
-        anchor.item: menuPopup.src ?? root
-        anchor.rect: src ? (root.vert
-            ? Qt.rect(src.width + 8, 0, 1, 1)
-            : Qt.rect(0, src.height + 8, 1, 1))
-            : Qt.rect(0, 0, 1, 1)
-        anchor.edges: Edges.Top | Edges.Left
-        anchor.gravity: root.vert ? Edges.Top | Edges.Right : Edges.Bottom | Edges.Left
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.keyboardFocus: _open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+        WlrLayershell.namespace: "glyph-tray-menu"
 
         function open(cell) {
+            const p = cell.mapToItem(null, 0, 0);
+            posX = p.x / Theme.s;
+            posY = p.y / Theme.s;
             src = cell;
             _open = true;
         }
@@ -120,9 +120,34 @@ Item {
             menu: menuPopup._open && menuPopup.src !== null ? menuPopup.src.modelData?.menu ?? null : null
         }
 
+        // click anywhere outside card → close immediately
+        MouseArea {
+            id: backdrop
+            anchors.fill: parent
+            acceptedButtons: Qt.AllButtons
+            onPressed: mouse => {
+                const p = card.mapFromItem(backdrop, mouse.x, mouse.y);
+                if (p.x >= 0 && p.x <= card.width && p.y >= 0 && p.y <= card.height) {
+                    mouse.accepted = false;
+                    return;
+                }
+                menuPopup.close();
+            }
+        }
+
         Stage {
+            id: stage
+            focus: true
+            Keys.onEscapePressed: menuPopup.close()
+
             Rectangle {
                 id: card
+                x: root.vert
+                    ? Math.max(14, Math.min(menuPopup.posX + (menuPopup.src?.width ?? 24) + 8, stage.width - width - 14))
+                    : Math.max(14, Math.min(menuPopup.posX, stage.width - width - 14))
+                y: root.vert
+                    ? Math.max(14, Math.min(menuPopup.posY, stage.height - height - 14))
+                    : Math.max(14, Math.min(menuPopup.posY + (menuPopup.src?.height ?? 24) + 8, stage.height - height - 14))
                 width: 260
                 height: Math.max(0, menuItems.height + 20)
                 radius: Theme.corner(28)
@@ -133,9 +158,6 @@ Item {
                     x: root.vert ? -10 * (1 - menuPopup.t) : 0
                     y: root.vert ? 0 : -10 * (1 - menuPopup.t)
                 }
-
-                // click outside → close
-                HoverHandler { id: cardHov }
 
                 Column {
                     id: menuItems
@@ -219,13 +241,6 @@ Item {
                     }
                 }
             }
-        }
-
-        // close when cursor leaves card area
-        Timer {
-            interval: 400
-            running: menuPopup.visible && !cardHov.hovered
-            onTriggered: menuPopup.close()
         }
     }
 }

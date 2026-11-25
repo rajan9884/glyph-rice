@@ -26,6 +26,24 @@ Singleton {
     PwObjectTracker { objects: [root.sink, root.mic] }
     readonly property real vol: sink?.audio?.volume ?? 0
     readonly property bool muted: sink?.audio?.muted ?? true
+    readonly property bool headphones: {
+        const s = sink;
+        if (!s) return false;
+        const p = s.properties ?? ({});
+        const icon = String(p["device.icon-name"] || p["device.icon_name"] || p["media.icon-name"] || "").toLowerCase();
+        const form = String(p["device.form-factor"] || "").toLowerCase();
+        if (/headphone|headset|hands-?free|earbud/.test(icon) || /headphone|headset|hands-?free|earbud/.test(form)) return true;
+        const meta = [s.name, s.description, s.nickname, p["device.profile.description"], p["device.profile.name"]]
+            .filter(Boolean).join(" ").toLowerCase();
+        if (/(?:^|[^a-z])(headphones?|headset|earphones?|earbuds?|airpods|buds)(?:$|[^a-z])/.test(meta)) return true;
+        if (s.name?.startsWith("bluez_output.")) {
+            if (buds) return true;
+            const bt = Bluetooth.devices.values.find(d => d.connected && s.name.includes(d.address.replace(/:/g, "_")));
+            if (bt && /head|ear|bud|pod/.test(`${bt.icon} ${bt.deviceName} ${bt.name}`.toLowerCase())) return true;
+        }
+        return false;
+    }
+    readonly property string volIcon: headphones ? (muted ? "\u{F07CE}" : "\u{F02CB}") : (muted ? "\u{F075F}" : "\u{F057E}")
     readonly property bool micOn: !(mic?.audio?.muted ?? true)
     function setVol(v) {
         if (!sink?.audio) return;
