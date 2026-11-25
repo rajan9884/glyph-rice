@@ -169,6 +169,57 @@ local function cycle_windows(reverse)
     end
 end
 
+-- Cycle focus between occupied workspaces only
+local function cycle_workspaces(reverse)
+    return function()
+        local workspaces = hl.get_workspaces()
+        if not workspaces or #workspaces == 0 then return end
+
+        -- Filter to only occupied workspaces (windows > 0, not special, not -1)
+        local occupied = {}
+        for _, ws in ipairs(workspaces) do
+            if ws.windows and ws.windows > 0 and ws.id and ws.id > 0 and ws.name and not ws.name:match("^special:") then
+                table.insert(occupied, ws)
+            end
+        end
+
+        if #occupied == 0 then return end
+        if #occupied == 1 then
+            hl.dispatch(hl.dsp.focus({ workspace = occupied[1].id }))
+            return
+        end
+
+        table.sort(occupied, function(a, b) return a.id < b.id end)
+
+        local active = hl.get_active_workspace()
+        local current_idx = nil
+        if active then
+            for idx, ws in ipairs(occupied) do
+                if ws.id == active.id then
+                    current_idx = idx
+                    break
+                end
+            end
+        end
+
+        local next_idx = 1
+        if current_idx then
+            if reverse then
+                next_idx = current_idx - 1
+                if next_idx < 1 then next_idx = #occupied end
+            else
+                next_idx = current_idx + 1
+                if next_idx > #occupied then next_idx = 1 end
+            end
+        else
+            next_idx = reverse and #occupied or 1
+        end
+
+        local target = occupied[next_idx]
+        hl.dispatch(hl.dsp.focus({ workspace = target.id }))
+    end
+end
+
 -- Toggle active window between tiling and centered floating
 local function toggle_floating_centered()
     local win = hl.get_active_window()
@@ -194,6 +245,7 @@ return {
     toggle_special           = toggle_special,
     record                   = record,
     cycle_windows            = cycle_windows,
+    cycle_workspaces         = cycle_workspaces,
     resizer                  = resizer,
     resize_by_screen         = resize_by_screen,
     resize_active_window     = resize_active_window,
