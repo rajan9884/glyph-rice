@@ -7,12 +7,13 @@ hl.env("QT_AUTO_SCREEN_SCALE_FACTOR", "1")
 hl.env("XCURSOR_THEME", vars.cursorTheme)
 hl.env("XCURSOR_SIZE", vars.cursorSize)
 
--- Toolkit backends (pure Wayland, X11 disabled)
+-- Toolkit backends (prefer Wayland)
 hl.env("GDK_BACKEND", "wayland")
 hl.env("QT_QPA_PLATFORM", "wayland")
 hl.env("SDL_VIDEODRIVER", "wayland")
 hl.env("CLUTTER_BACKEND", "wayland")
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "wayland")
+hl.env("MOZ_ENABLE_WAYLAND", "1")
 
 -- XDG specifications
 hl.env("XDG_CURRENT_DESKTOP", "Hyprland")

@@ -19,7 +19,7 @@ PACMAN=(
     pipewire pipewire-pulse pipewire-alsa wireplumber networkmanager bluez bluez-utils blueman power-profiles-daemon
     # utilities invoked by keybinds and shell
     brightnessctl playerctl wl-clipboard cliphist grim slurp imagemagick libvips libqalculate
-    gpu-screen-recorder intel-media-driver libva-utils ydotool libnotify trash-cli
+    gpu-screen-recorder vulkan-intel intel-media-driver libva-utils ydotool libnotify trash-cli
     # terminal and console tools
     kitty zsh zsh-autosuggestions zsh-syntax-highlighting zsh-completions fzf bat fd ripgrep gum tesseract tesseract-data-eng starship fastfetch btop cava eza zoxide direnv lazygit yazi tmux neovim
     # apps from variables.lua
@@ -37,7 +37,6 @@ AUR=(
 declare -A EXTRA=(
     [telegram]="telegram-desktop"                                        # Super+D
     [spotify]="spotify-launcher spicetify-cli spicetify-marketplace-bin" # Super+M
-    [clash]="clash-verge-rev-bin"                                        # VPN panel, Super+P
 )
 
 G=config/quickshell/glyph
@@ -48,6 +47,8 @@ LINKS=(
     "config/quickshell/rice                     .config/quickshell/rice"
     "config/quickshell/rice/rice                .local/bin/rice"
     "config/qtengine                            .config/qtengine"
+    "config/electron-flags.conf                 .config/electron-flags.conf"
+    "config/helium-browser-flags.conf           .config/helium-browser-flags.conf"
     "$G/term/qtengine.colors                    .config/qtengine.colors"
     "$G/term/starship.toml                      .config/starship.toml"
     "$G/term/fastfetch                          .config/fastfetch"
@@ -139,6 +140,7 @@ services() {
     sudo chmod +x /usr/local/bin/power-profile-switch
     sudo cp "$DOTS/config/udev/99-power-switch.rules" /etc/udev/rules.d/99-power-switch.rules
     sudo cp "$DOTS/config/systemd/power-profile-switch.service" /etc/systemd/system/power-profile-switch.service
+    sudo cp "$DOTS/config/polkit/49-warp-svc.rules" /etc/polkit-1/rules.d/49-warp-svc.rules
     sudo udevadm control --reload 2>/dev/null || true
     sudo systemctl daemon-reload 2>/dev/null || true
     sudo systemctl enable power-profile-switch.service 2>/dev/null || true
@@ -241,5 +243,5 @@ case "${1:-}" in
         # spicetify requires Spotify already installed and logged in; nothing to apply before first launch
         [[ " ${WITH//,/ } " == *" spotify "* ]] && say "spotify: launch it, log in, then run spicetify config custom_apps marketplace && spicetify backup apply"
         say "done. reboot and pick Hyprland in sddm" ;;
-    *) echo "usage: $0 [--with telegram,spotify,clash | --links | --sddm]"; exit 1 ;;
+    *) echo "usage: $0 [--with telegram,spotify | --links | --sddm]"; exit 1 ;;
 esac

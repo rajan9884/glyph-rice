@@ -2,6 +2,15 @@ local vars = require("variables")
 local fn   = require("hyprland.functions")
 
 hl.on("hyprland.start", function()
+    -- Export Wayland/toolkit env to systemd --user and D-Bus so launcher/D-Bus-activated apps use Wayland too
+    hl.exec_cmd(
+        "dbus-update-activation-environment --systemd "
+        .. "WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP "
+        .. "QT_QPA_PLATFORMTHEME QT_QPA_PLATFORM QT_WAYLAND_DISABLE_WINDOWDECORATION QT_AUTO_SCREEN_SCALE_FACTOR "
+        .. "GDK_BACKEND SDL_VIDEODRIVER CLUTTER_BACKEND ELECTRON_OZONE_PLATFORM_HINT MOZ_ENABLE_WAYLAND "
+        .. "LIBVA_DRIVER_NAME _JAVA_AWT_WM_NONREPARENTING XCURSOR_THEME XCURSOR_SIZE"
+    )
+
     -- Shell: the one selected in rice
     hl.exec_cmd(vars.rice .. " start")
 

@@ -1,5 +1,6 @@
 [Unit]
 Description=Set power profile according to AC/Battery status on boot
+Wants=power-profiles-daemon.service
 After=power-profiles-daemon.service
 
 [Service]
@@ -7,4 +8,4 @@ Type=oneshot
 ExecStart=/usr/local/bin/power-profile-switch
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=graphical.target
