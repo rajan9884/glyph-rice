@@ -1,0 +1,8 @@
+# Glyph Nothing OS theme for imv
+[options]
+background = 000000
+overlay_font = Space Mono:11
+overlay_text_color = F2F2F2
+overlay_background_color = 0E0E0E
+overlay_background_alpha = D9
+overlay_position_bottom = true

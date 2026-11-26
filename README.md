@@ -73,7 +73,7 @@ Weather (home, deck, lock) comes from open-meteo; the place is looked up by your
 | `quickshell/glyph/` | `~/.config/quickshell/glyph` |
 | `quickshell/rice/` | `~/.config/quickshell/rice`, `~/.local/bin/rice` |
 | `quickshell/glyph/term/` | `starship.toml` `fastfetch/` `btop/` `cava/` `gtk-*/gtk.css` `qtengine.colors` in `~/.config` (with a Style colour — copies in `~/.local/state/rice/glyph`; edit `term/`) |
-| `kitty/` `qtengine/` `*-flags.conf` | `~/.config/…` |
+| `kitty/` `qtengine/` `zed/` `tmux/` `imv/` `mpv/` `*-flags.conf` | `~/.config/…` |
 | `shell/` `git/` `scripts/` | `~/.zshrc`, `~/.config/shell`, `~/.gitconfig`, `~/.local/bin` |
 | `fonts/` | `~/.local/share/fonts/glyph` |
 | `sddm/glyph/` | copied to `/usr/share/sddm/themes/glyph` (the `sddm` user can't read your home), set in `/etc/sddm.conf.d/zz-glyph.conf`; to undo, delete both |

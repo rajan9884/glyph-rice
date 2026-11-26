@@ -22,8 +22,8 @@ PACMAN=(
     gpu-screen-recorder vulkan-intel intel-media-driver libva-utils ydotool libnotify trash-cli
     # terminal and console tools
     kitty zsh zsh-autosuggestions zsh-syntax-highlighting zsh-completions fzf bat fd ripgrep gum tesseract tesseract-data-eng starship fastfetch btop cava eza zoxide direnv lazygit yazi tmux neovim
-    # apps from variables.lua
-    pavucontrol
+    # apps from variables.lua and yazi/strata openers
+    pavucontrol imv
     # fonts (cjk — kaomoji in Charms), icons (Papirus-Dark — folder theme base), dark base for gtk.css
     ttf-jetbrains-mono-nerd noto-fonts noto-fonts-cjk noto-fonts-emoji papirus-icon-theme adw-gtk-theme
 )
@@ -74,6 +74,13 @@ LINKS=(
     "config/yazi                                .config/yazi"
     "config/strata                              .config/strata"
     "config/nvim                                .config/nvim"
+    "config/zed/settings.json                   .config/zed/settings.json"
+    "config/zed/keymap.json                     .config/zed/keymap.json"
+    "config/zed/tasks.json                      .config/zed/tasks.json"
+    "config/zed/themes                          .config/zed/themes"
+    "config/tmux                                .config/tmux"
+    "config/imv                                 .config/imv"
+    "config/mpv                                 .config/mpv"
     "config/scripts/fcs                         .local/bin/fcs"
     "config/scripts/ff                          .local/bin/ff"
     "config/scripts/ffd                         .local/bin/ffd"
@@ -203,12 +210,20 @@ SSH_SNIP
     fi
 
     command -v gsettings >/dev/null || return 0 # --links on systems without GNOME schemas
-    # Dark mode for Zen, Electron, and libadwaita (via portal) and dark gtk3 base for our gtk.css
+    # Dark mode for Zen, Electron, Zed, and libadwaita (via portal) + Nothing OS fonts and accent
     gsettings set org.gnome.desktop.interface color-scheme prefer-dark
     gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3-dark
-    # set strata as default file manager
+    gsettings set org.gnome.desktop.interface font-name 'Space Grotesk 11'
+    gsettings set org.gnome.desktop.interface document-font-name 'Space Grotesk 11'
+    gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrainsMono Nerd Font 11'
+    gsettings set org.gnome.desktop.interface accent-color red
+    # set strata as default file manager and imv as default image viewer
     command -v xdg-mime >/dev/null && xdg-mime default io.github.lgse.Strata.desktop inode/directory 2>/dev/null || true
     command -v xdg-mime >/dev/null && xdg-mime default io.github.lgse.Strata.desktop x-scheme-handler/trash 2>/dev/null || true
+    command -v xdg-mime >/dev/null && xdg-mime default imv.desktop \
+        image/png image/jpeg image/jpg image/webp image/gif image/bmp \
+        image/svg+xml image/tiff image/avif image/heif image/jxl \
+        image/qoi image/x-bmp image/x-png image/pjpeg image/x-farbfeld 2>/dev/null || true
 }
 
 greeter() { # Login theme. Copy rather than symlink: sddm user cannot read restricted $HOME

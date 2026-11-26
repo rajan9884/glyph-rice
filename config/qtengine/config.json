@@ -4,13 +4,13 @@
         "iconTheme": "Rice",
         "style": "Darkly",
         "font": {
-            "family": "Sans Serif",
-            "size": 12,
+            "family": "Space Grotesk",
+            "size": 11,
             "weight": -1
         },
         "fontFixed": {
-            "family": "Monospace",
-            "size": 12,
+            "family": "JetBrainsMono Nerd Font",
+            "size": 11,
             "weight": -1
         }
     },
