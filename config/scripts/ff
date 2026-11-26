@@ -4,6 +4,58 @@
 
 set -euo pipefail
 
+preview() {
+  local f="$1"
+  [ -e "$f" ] || return 0
+
+  if [ -d "$f" ]; then
+    if command -v eza >/dev/null 2>&1; then
+      eza --icons=auto --color=always -la "$f"
+    else
+      ls -la --color=always "$f"
+    fi
+    return 0
+  fi
+
+  local mime
+  mime=$(file --brief --dereference --mime -- "$f")
+
+  if [[ "$mime" == image/* ]] && ([ -n "${KITTY_WINDOW_ID:-}" ] || [ "${TERM:-}" = "xterm-kitty" ]) && command -v kitten >/dev/null 2>&1; then
+    local dim="${FZF_PREVIEW_COLUMNS:-80}x${FZF_PREVIEW_LINES:-24}"
+    # --unicode-placeholder binds the image to preview cells so moving to non-image files clears it cleanly
+    kitten icat --clear --transfer-mode=memory --unicode-placeholder --stdin=no --place="${dim}@0x0" "$f" \
+      | sed '$d' | sed $'$s/$/\e[m/'
+    return 0
+  fi
+
+  if [[ "$mime" == application/pdf* ]] && command -v pdftotext >/dev/null 2>&1; then
+    if command -v bat >/dev/null 2>&1; then
+      pdftotext -l 5 "$f" - 2>/dev/null | tr '\f' '\n' | head -n "${FZF_PREVIEW_LINES:-40}" \
+        | bat --style=numbers --color=always --pager=never -l txt -- -
+    else
+      pdftotext -l 5 "$f" - 2>/dev/null | tr '\f' '\n' | head -n "${FZF_PREVIEW_LINES:-40}" | sed 's/^/ /'
+    fi
+    return 0
+  fi
+
+  if [[ "$mime" == *=binary* ]]; then
+    file --brief --dereference -- "$f"
+    return 0
+  fi
+
+  if command -v bat >/dev/null 2>&1; then
+    bat --style=numbers --color=always --pager=never -- "$f" 2>/dev/null || cat -- "$f"
+  else
+    cat -- "$f"
+  fi
+}
+
+if [ "${1:-}" = "--preview" ]; then
+  shift
+  preview "${1:-}"
+  exit 0
+fi
+
 PRINT_ONLY=false
 ARGS=()
 for arg in "$@"; do
@@ -14,13 +66,8 @@ for arg in "$@"; do
   fi
 done
 
-if [ "${TERM:-}" = "xterm-kitty" ] && command -v kitty >/dev/null 2>&1; then
-  PREVIEW='case $(file --mime-type -b {}) in image/*) kitty icat --clear --transfer-mode=memory --stdin=no --place=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}@0x0 {} ;; *) bat --style=numbers --color=always {} 2>/dev/null || cat {} ;; esac'
-elif command -v bat >/dev/null 2>&1; then
-  PREVIEW='bat --style=numbers --color=always {}'
-else
-  PREVIEW='cat {}'
-fi
+SELF="$(readlink -f "$0")"
+PREVIEW="$(printf '%q' "$SELF") --preview {}"
 
 if $PRINT_ONLY; then
   fzf --preview="$PREVIEW" "${ARGS[@]}"
