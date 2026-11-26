@@ -17,13 +17,12 @@ import "prefs"
 import "quick"
 import "settings"
 import "shot"
-import "vpn"
 import "wall"
 import "keys"
 import "polkit"
 
 // glyph: rice in nothing os spirit. Home on wallpaper, bar, launcher, quick settings,
-// Glyph bars at edges instead of OSD, notification island, power menu, settings, deck (dashboard bottom), clipboard, charms (emoji and symbols), screenshots, vpn, wallpaper. Lock — separate process (lock.qml).
+// Glyph bars at edges instead of OSD, notification island, power menu, settings, deck (dashboard bottom), clipboard, charms (emoji and symbols), screenshots, wallpaper. Lock — separate process (lock.qml).
 // Switches with demonshot via `rice switch` / Rice app — hypr binds shared (shell:*), each shell takes its own
 ShellRoot {
     id: shell
@@ -33,7 +32,7 @@ ShellRoot {
         id: quick
         onPowerRequested: power.open()
         onSettingsRequested: prefs.open()
-        onPortalRequested: vpn.requestSignIn()
+        onPortalRequested: Sys.openPortal()
     }
     Power { id: power }
     Prefs { id: prefs; onWallRequested: walls.open() }
@@ -44,7 +43,6 @@ ShellRoot {
     Charms { id: charms }
     Deck { id: deck }
     Shot { id: shot }
-    Vpn { id: vpn; wifiNetwork: quick.net }
     Walls { id: walls }
     Keys { id: keys }
     PolkitAgent { id: polkitAgent }
@@ -141,7 +139,7 @@ ShellRoot {
     Shortcut { name: "settings"; description: "settings"; onPressed: prefs.toggle() }
     Shortcut { name: "power"; description: "power menu"; onPressed: power.visible ? power.close() : power.open() }
     Shortcut { name: "shot"; description: "screenshot"; onPressed: shot.open() }
-    Shortcut { name: "pact"; description: "vpn: clash verge"; onPressed: vpn.toggle() }
+    Shortcut { name: "pact"; description: "vpn: cloudflare warp"; onPressed: Sys.toggleVpn() }
     Shortcut { name: "clip"; description: "clipboard"; onPressed: clip.toggle() }
     Shortcut { name: "charms"; description: "emoji, kaomoji, symbols"; onPressed: charms.toggle() }
     Shortcut { name: "wall"; description: "wallpapers"; onPressed: walls.toggle() }

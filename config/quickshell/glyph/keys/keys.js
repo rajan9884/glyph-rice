@@ -21,7 +21,7 @@ var KEYBINDINGS = [
     { cat: "apps", desc: "Rice & Theme Settings", keys: ["SUPER", "I"], detail: "Wallpaper tones, borders, rules" },
     { cat: "apps", desc: "Wallpaper Picker", keys: ["SUPER", "SHIFT", "W"], detail: "Quickshell wallpaper selector" },
     { cat: "apps", desc: "Emoji & Charms", keys: ["SUPER", "."], detail: "Kaomoji, emoji and symbol picker" },
-    { cat: "apps", desc: "VPN / Network Portal", keys: ["SUPER", "P"], detail: "Clash Verge / network portal" },
+    { cat: "apps", desc: "VPN (Cloudflare WARP)", keys: ["SUPER", "P"], detail: "Toggle on-demand Cloudflare WARP" },
     { cat: "apps", desc: "Power / Session Menu", keys: ["SUPER", "Esc"], detail: "Power off, reboot, logout (also Ctrl+Alt+Del)" },
     { cat: "apps", desc: "Type Last Copied", keys: ["CTRL", "SHIFT", "ALT", "V"], detail: "Auto-type clipboard via ydotool" },
 

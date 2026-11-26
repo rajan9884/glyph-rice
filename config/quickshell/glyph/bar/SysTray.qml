@@ -13,9 +13,8 @@ Item {
 
     property bool vert: true  // matches Bar.vert
 
-    // filter out apps handled natively by Quickshell: clash-verge (Vpn.qml), blueman (Quickshell.Bluetooth module)
+    // filter out apps handled natively by Quickshell: blueman (Quickshell.Bluetooth module)
     readonly property var items: SystemTray.items.values.filter(i =>
-        !i.id.includes("clash-verge") &&
         !i.id.toLowerCase().includes("blueman") &&
         !i.id.toLowerCase().includes("bluetooth")
     )

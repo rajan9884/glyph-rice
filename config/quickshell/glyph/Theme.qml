@@ -211,8 +211,6 @@ Singleton {
             property int recFps: 60
             property int recQuality: 2     // medium, high, very_high, ultra
             property bool recCursor: true
-            property bool vpnPortal: false // tunnel removed due to portal, return in open network (vpn/Vpn)
-            property bool vpnKill: false   // kill switch (vpn/Vpn, only with /usr/local/bin/glyph-kill)
         }
     }
 

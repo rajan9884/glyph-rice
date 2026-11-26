@@ -100,7 +100,7 @@ return {
     kbMoveWindow               = "SUPER + Z",
     kbResizeWindow             = "SUPER + ALT + X",
     kbWindowPip                = "SUPER + ALT + backslash",
-    kbPinWindow                = "SUPER + SHIFT + P", -- Super+P — VPN agreement
+    kbPinWindow                = "SUPER + SHIFT + P", -- Super+P — VPN toggle
     kbWindowFullscreen         = "SUPER + F",
     kbWindowBorderedFullscreen = "SUPER + ALT + F",
     kbToggleWindowFloating     = "SUPER + T",

@@ -81,11 +81,21 @@ Singleton {
     Process {
         id: poll
         command: ["sh", "-c", "pgrep -f '^gpu-screen-recorder' >/dev/null && echo rec; "
-                            + "rfkill -rno SOFT | grep -qv '^blocked' || echo air"]
+                            + "rfkill -rno SOFT | grep -qv '^blocked' || echo air; "
+                            + "if systemctl is-active --quiet warp-svc.service; then "
+                            + "  echo warp:svc; "
+                            + "  case \"$(timeout 1 warp-cli status 2>/dev/null || true)\" in "
+                            + "    *'Status update: Connected'*) echo warp:connected ;; "
+                            + "    *'Status update: Connecting'*) echo warp:connecting ;; "
+                            + "  esac; "
+                            + "fi"]
         stdout: StdioCollector {
             onStreamFinished: {
                 root.rec = text.includes("rec");
                 root.air = text.includes("air");
+                root.warpSvc = text.includes("warp:svc");
+                root.warpConnecting = text.includes("warp:connecting");
+                root.warpActive = text.includes("warp:connected") || root.warpConnecting;
             }
         }
     }
@@ -232,30 +242,81 @@ Singleton {
         }
     }
 
-// ---- vpn: clash verge via its tray items, like agreement in demonshot.
-// Caveat: expects English labels (language: en in Clash Verge); update strings if using another language ----
-    readonly property var verge: SystemTray.items.values.find(i => i.title === "clash-verge" || i.id.includes("clash-verge")) ?? null
-    QsMenuOpener { id: vmenu; menu: root.verge?.menu ?? null }
-    readonly property var vpnItems: ["System Proxy", "TUN Mode"]
-    function vpnItem(l) { return vmenu.children.values.find(e => e.text.startsWith(l)) ?? null; }
-    readonly property bool vpn: vpnItems.some(l => vpnItem(l)?.checkState === Qt.Checked)
-    property var queue: []
-    function toggleVpn() {
-        if (!verge) return Quickshell.execDetached(["clash-verge"]); // asleep — wake up
-        queue = vpn ? vpnItems.filter(l => vpnItem(l)?.checkState === Qt.Checked) : vpnItems;
-        presser.start();
+// ---- vpn: on-demand Cloudflare WARP (starts warp-svc on connect, terminates it on disconnect) ----
+    property bool warpSvc: false
+    property bool warpActive: false
+    property bool warpConnecting: false
+    property int vpnWant: -1 // -1 follows polled state; 0 stopping; 1 starting/connecting
+    readonly property bool vpnBusy: vpnProc.running || (vpnWant === 1 && !warpActive) || (vpnWant === 0 && (warpActive || warpSvc))
+    readonly property bool vpn: vpnWant >= 0 ? vpnWant === 1 : warpActive
+    onWarpActiveChanged: {
+        if (vpnWant === 1 && warpActive) { vpnWant = -1; vpnWantT.stop(); vpnSyncT.stop(); }
     }
-    // verge rebuilds menu after each press — one by one
-    Timer {
-        id: presser
-        interval: 350
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: {
-            const [l, ...rest] = root.queue;
-            root.queue = rest;
-            if (l) root.vpnItem(l)?.triggered();
-            if (!rest.length) stop();
+    onWarpSvcChanged: {
+        if (vpnWant === 0 && !warpSvc) { vpnWant = -1; vpnWantT.stop(); vpnSyncT.stop(); }
+    }
+    Timer { id: vpnWantT; interval: 10000; onTriggered: { root.vpnWant = -1; vpnSyncT.stop(); poll.running = true; } }
+    Timer { id: vpnSyncT; interval: 500; repeat: true; onTriggered: poll.running = true }
+    Process {
+        id: vpnProc
+        onExited: code => {
+            poll.running = true;
+            const enabling = root.vpnWant === 1;
+            if (code !== 0) {
+                root.vpnWant = -1;
+                vpnWantT.stop();
+                vpnSyncT.stop();
+                return;
+            }
+            if (!enabling && !root.warpSvc) {
+                root.vpnWant = -1;
+                vpnWantT.stop();
+                vpnSyncT.stop();
+            } else {
+                vpnSyncT.start();
+            }
         }
+    }
+    function toggleVpn() {
+        if (vpnProc.running) return;
+        const enable = !vpn;
+        vpnWant = enable ? 1 : 0;
+        vpnWantT.restart();
+        if (enable) {
+            vpnProc.command = ["sh", "-c",
+                "started=0; "
+                + "if ! systemctl is-active --quiet warp-svc.service; then "
+                + "  systemctl start warp-svc.service || exit $?; "
+                + "  started=1; "
+                + "fi; "
+                + "i=0; while [ $i -lt 30 ]; do "
+                + "  if out=$(warp-cli connect 2>&1); then exit 0; fi; "
+                + "  case \"$out\" in "
+                + "    *'daemon is not running'*|*'No such file or directory'*|*'Connection refused'*) sleep 0.2; i=$((i+1)) ;; "
+                + "    *) [ \"$started\" -eq 1 ] && systemctl stop warp-svc.service >/dev/null 2>&1 || true; "
+                + "       notify-send -a vpn \"Cloudflare WARP\" \"$(printf '%s' \"$out\" | head -n1)\" >/dev/null 2>&1 || true; "
+                + "       exit 1 ;; "
+                + "  esac; "
+                + "done; "
+                + "[ \"$started\" -eq 1 ] && systemctl stop warp-svc.service >/dev/null 2>&1 || true; "
+                + "notify-send -a vpn \"Cloudflare WARP\" \"Timed out waiting for warp-svc\" >/dev/null 2>&1 || true; "
+                + "exit 1"
+            ];
+        } else {
+            vpnProc.command = ["sh", "-c",
+                "if systemctl is-active --quiet warp-svc.service; then "
+                + "  timeout 4 warp-cli disconnect >/dev/null 2>&1 || true; "
+                + "  systemctl stop warp-svc.service || exit $?; "
+                + "fi"
+            ];
+        }
+        vpnProc.running = true;
+    }
+    function openPortal() {
+        if (vpn && !vpnProc.running) {
+            Quickshell.execDetached(["notify-send", "-a", "vpn", "Portal", "Disconnecting WARP for network sign-in"]);
+            toggleVpn();
+        }
+        Qt.openUrlExternally("http://neverssl.com");
     }
 }

@@ -21,7 +21,7 @@ Rectangle {
     readonly property var wifi: Networking.devices.values.find(d => d.type === DeviceType.Wifi) ?? null
     readonly property var bt: Bluetooth.defaultAdapter
     readonly property bool on: isWifi ? Networking.wifiEnabled : bt?.enabled ?? false
-    // network with captive portal: portal itself (and vpn removal) opens Vpn, here — reopen it if tab closed
+    // network with captive portal: clicking connected network opens the portal sign-in page
     readonly property bool portal: Networking.connectivity === NetworkConnectivity.Portal
 
     property var ask: null // network that needs a password
