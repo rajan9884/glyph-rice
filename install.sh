@@ -14,7 +14,7 @@ PACMAN=(
     base-devel git curl jq python
     # session
     hyprland hypridle hyprsunset hyprpicker xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
-    sddm quickshell gnome-keyring geoclue upower xdg-user-dirs firefox
+    sddm quickshell gnome-keyring geoclue upower xdg-user-dirs
     # audio, network, bluetooth
     pipewire pipewire-pulse pipewire-alsa wireplumber networkmanager bluez bluez-utils blueman power-profiles-daemon
     # utilities invoked by keybinds and shell
@@ -23,14 +23,14 @@ PACMAN=(
     # terminal and console tools
     kitty zsh zsh-autosuggestions zsh-syntax-highlighting zsh-completions fzf bat fd ripgrep gum tesseract tesseract-data-eng starship fastfetch btop cava eza zoxide direnv lazygit yazi tmux neovim
     # apps from variables.lua and yazi/strata openers
-    pavucontrol imv
+    pavucontrol imv ffmpeg yt-dlp deno
     # fonts (cjk — kaomoji in Charms), icons (Papirus-Dark — folder theme base), dark base for gtk.css
     ttf-jetbrains-mono-nerd noto-fonts noto-fonts-cjk noto-fonts-emoji papirus-icon-theme adw-gtk-theme
 )
 
 AUR=(
     qtengine darkly-bin bibata-cursor-theme-bin
-    strata-bin
+    strata-bin helium-browser-bin
 )
 
 # optional components (caelestia-style). Keybinds in special workspaces launch apps from hypr/variables.lua
@@ -49,6 +49,7 @@ LINKS=(
     "config/qtengine                            .config/qtengine"
     "config/electron-flags.conf                 .config/electron-flags.conf"
     "config/helium-browser-flags.conf           .config/helium-browser-flags.conf"
+    "config/helium                              .config/helium"
     "$G/term/qtengine.colors                    .config/qtengine.colors"
     "$G/term/starship.toml                      .config/starship.toml"
     "$G/term/fastfetch                          .config/fastfetch"
@@ -81,6 +82,9 @@ LINKS=(
     "config/tmux                                .config/tmux"
     "config/imv                                 .config/imv"
     "config/mpv                                 .config/mpv"
+    "config/cliamp/config.toml                  .config/cliamp/config.toml"
+    "config/cliamp/themes                       .config/cliamp/themes"
+    "config/zapfast/themes/Glyph.json           .config/zapfast/themes/Glyph.json"
     "config/scripts/fcs                         .local/bin/fcs"
     "config/scripts/ff                          .local/bin/ff"
     "config/scripts/ffd                         .local/bin/ffd"
@@ -209,6 +213,18 @@ SSH_SNIP
         chsh -s "$(command -v zsh)" 2>/dev/null || sudo chsh -s "$(command -v zsh)" "$USER" 2>/dev/null || true
     fi
 
+    # Set ZapFast default theme to Glyph
+    if command -v jq >/dev/null; then
+        mkdir -p "$HOME/.config/zapfast"
+        local zf="$HOME/.config/zapfast/settings.json" tmp
+        tmp="$(mktemp)"
+        if [ -s "$zf" ]; then
+            jq '.theme = "dark" | .custom_theme = "Glyph.json"' "$zf" > "$tmp" && mv "$tmp" "$zf"
+        else
+            printf '{"theme":"dark","custom_theme":"Glyph.json"}\n' > "$tmp" && mv "$tmp" "$zf"
+        fi
+    fi
+
     command -v gsettings >/dev/null || return 0 # --links on systems without GNOME schemas
     # Dark mode for Zen, Electron, Zed, and libadwaita (via portal) + Nothing OS fonts and accent
     gsettings set org.gnome.desktop.interface color-scheme prefer-dark
@@ -217,7 +233,10 @@ SSH_SNIP
     gsettings set org.gnome.desktop.interface document-font-name 'Space Grotesk 11'
     gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrainsMono Nerd Font 11'
     gsettings set org.gnome.desktop.interface accent-color red
-    # set strata as default file manager and imv as default image viewer
+    # set helium as default web browser, strata as default file manager, and imv as default image viewer
+    command -v xdg-settings >/dev/null && xdg-settings set default-web-browser helium.desktop 2>/dev/null || true
+    command -v xdg-mime >/dev/null && xdg-mime default helium.desktop \
+        x-scheme-handler/http x-scheme-handler/https text/html application/xhtml+xml 2>/dev/null || true
     command -v xdg-mime >/dev/null && xdg-mime default io.github.lgse.Strata.desktop inode/directory 2>/dev/null || true
     command -v xdg-mime >/dev/null && xdg-mime default io.github.lgse.Strata.desktop x-scheme-handler/trash 2>/dev/null || true
     command -v xdg-mime >/dev/null && xdg-mime default imv.desktop \

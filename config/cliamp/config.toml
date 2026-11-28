@@ -1,0 +1,8 @@
+theme = "glyph"
+visualizer = "ClassicPeak"
+speed = 1.00
+shuffle = false
+
+[ytmusic]
+enabled = true
+cookies_from = "firefox"

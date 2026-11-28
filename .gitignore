@@ -5,3 +5,5 @@ config/quickshell/glyph/buds/*.png
 config/fonts/.uuid
 # Claude Code: custom settings and skills. git add . will ignore them
 .claude/
+# Chromium writes a compiled pack into unpacked themes at runtime
+config/helium/glyph-theme/Cached Theme.pak

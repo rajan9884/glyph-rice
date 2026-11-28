@@ -21,7 +21,7 @@ return {
 
     -- Apps
     terminal                   = "kitty",
-    browser                    = "firefox",
+    browser                    = "helium-browser",
     fileExplorer               = "strata",
     audioSettings              = "pavucontrol",
     -- special workspace apps (launch if empty) and editor. Binds read them on press,

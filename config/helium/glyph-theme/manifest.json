@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "version": "1.0.0",
+  "name": "Glyph Nothing",
+  "description": "Glyph Nothing OS pure-black monochrome theme with Nothing Red accents",
+  "theme": {
+    "colors": {
+      "frame": [0, 0, 0],
+      "frame_inactive": [0, 0, 0],
+      "frame_incognito": [0, 0, 0],
+      "frame_incognito_inactive": [0, 0, 0],
+      "background_tab": [0, 0, 0],
+      "background_tab_inactive": [0, 0, 0],
+      "background_tab_incognito": [0, 0, 0],
+      "background_tab_incognito_inactive": [0, 0, 0],
+      "toolbar": [14, 14, 14],
+      "toolbar_text": [242, 242, 242],
+      "toolbar_button_icon": [242, 242, 242],
+      "tab_text": [255, 255, 255],
+      "tab_background_text": [140, 140, 140],
+      "tab_background_text_inactive": [74, 74, 74],
+      "tab_background_text_incognito": [140, 140, 140],
+      "tab_background_text_incognito_inactive": [74, 74, 74],
+      "bookmark_text": [242, 242, 242],
+      "omnibox_background": [26, 26, 26],
+      "omnibox_text": [242, 242, 242],
+      "ntp_background": [0, 0, 0],
+      "ntp_text": [242, 242, 242],
+      "ntp_link": [215, 25, 33],
+      "ntp_header": [14, 14, 14],
+      "button_background": [26, 26, 26]
+    },
+    "tints": {
+      "buttons": [-1, 0.0, 0.95]
+    }
+  }
+}
